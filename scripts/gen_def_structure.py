@@ -16,7 +16,7 @@ import json
 
 from pymatgen.io.vaspio_set import MPGGAVaspInputSet
 from pymatgen.matproj.rest import MPRester
-from pymatgen.symmetry.finder import SymmetryFinder
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Structure
 from pymatgen.serializers.json_coders import pmg_load, pmg_dump
 from pymatgen.analysis.defects.point_defects import Vacancy
@@ -46,6 +46,8 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
             struct = mp.get_structure_by_material_id(mpid)
 
     print (struct.formula)
+
+    struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
     sc_scale = get_sc_scale(struct,cellmax)
 
     mpvis = MPGGAVaspInputSet()
