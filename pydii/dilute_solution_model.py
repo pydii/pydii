@@ -790,14 +790,14 @@ def solute_site_preference_finder(
             for index1 in range(ind_map[0]+1,ind_map[1]):
                 for index2 in range(ind_map[0]):
                     for i in range(n):
-                        print (i, index1, index2)
+                        #print (i, index1, index2)
                         dC[i,index1,index2] = 0
                 for index2 in range(ind_map[1],n):
                     for i in range(n):
-                        print (i, index1, index2)
+                        #print (i, index1, index2)
                         dC[i,index1,index2] = 0
 
-    print ('dC', dC)
+    #print ('dC', dC)
     # dE matrix: Flip energies (or raw defect energies)
     els = [vac_def['site_specie'] for vac_def in vac_defs]
     dE = []
@@ -863,9 +863,9 @@ def solute_site_preference_finder(
         total_c.append(sum([sum(c[i,:]) for i in range(*ind)]))
     #total_c = [sum(c[i,:]) for i in range(n)]
     c_ratio = [total_c[i]/sum(total_c) for i in range(m)]
-    print(('-------c_ratio-------------'))
-    for i in range(m):
-        print((c_ratio[i]))
+    #print(('-------c_ratio-------------'))
+    #for i in range(m):
+    #    print((c_ratio[i]))
 
     # Expression for Omega, the Grand Potential
     omega = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:]) for i in range(n+1)])
@@ -875,8 +875,8 @@ def solute_site_preference_finder(
                     dC[j,epi,p_r]) for j in range(n+1)])
             omega -= k_B*T*multiplicity[p_r]*exp(-(dE[epi,p_r]-sum_mu)/(k_B*T))
 
-    print ('omega')
-    print (omega)
+    #print ('omega')
+    #print (omega)
     def compute_mus():
 
         def reduce_mu():
