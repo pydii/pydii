@@ -1,7 +1,7 @@
 import os
 import glob
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 SETUP_PTH = os.path.dirname(os.path.abspath(__file__))
 
@@ -11,6 +11,7 @@ def readme():
 
 setup(
         name="pydii",
+        packages=find_packages(),
         version="1.0.0",
         install_requires=["pymatgen>=3.0.6", "sympy>=0.7.5", "numpy>=1.8"],
         author="Bharat Medasani",
@@ -39,17 +40,17 @@ setup(
         tests_require=['nose'],
         entry_points={
             'console_scripts':[
-                'gen_def_structure=scripts.gen_def_structure.'
+                'gen_def_structure=pydii.scripts.gen_def_structure:'
                                'im_vac_antisite_def_struct_gen',
-                'gen_def_energy=scripts.gen_def_energy.'
+                'gen_def_energy=pydii.scripts.gen_def_energy:'
                                'im_vac_antisite_def_energy_parse',
-                'gen_def_profile=scripts.gen_def_profile.'
+                'gen_def_profile=pydii.scripts.gen_def_profile:'
                                'im_vac_antisite_def_profile',
-                'gen_sol_pref_structure=scripts.gen_def_structure.'
+                'gen_sol_pref_structure=pydii.scripts.gen_def_structure:'
                                'im_sol_sub_def_struct_gen',
-                'gen_sol_def_energy=scripts.gen_def_energy.'
+                'gen_sol_def_energy=pydii.scripts.gen_def_energy:'
                                'im_sol_sub_def_energy_parse',
-                'gen_sol_site_pref=scripts.gen_def_profile.'
+                'gen_sol_site_pref=pydii.scripts.gen_def_profile:'
                                'im_sol_sub_def_profile']}
 )
 
