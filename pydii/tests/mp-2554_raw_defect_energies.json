@@ -1,0 +1,186 @@
+{
+    "antisites": [
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "V", 
+        "site_specie": "Al", 
+        "site_index": 1, 
+        "energy": -4.41471015999997
+      }, 
+      {
+        "site_multiplicity": 2, 
+        "substitution_specie": "V", 
+        "site_specie": "Al", 
+        "site_index": 2, 
+        "energy": -4.127794839999979
+      }, 
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "Al", 
+        "site_specie": "V", 
+        "site_index": 3, 
+        "energy": 7.540633220000018
+      }
+    ], 
+    "vacancies": [
+      {
+        "site_multiplicity": 1, 
+        "site_index": 1, 
+        "site_specie": "Al", 
+        "energy": 5.713628799999981
+      }, 
+      {
+        "site_multiplicity": 2, 
+        "site_index": 2, 
+        "site_specie": "Al", 
+        "energy": 5.922709030000021
+      }, 
+      {
+        "site_multiplicity": 1, 
+        "site_index": 3, 
+        "site_specie": "V", 
+        "energy": 10.826600429999985
+      }
+    ], 
+    "e0": -21.347448503888888, 
+    "structure": {
+      "lattice": {
+        "a": 3.766548786602486, 
+        "gamma": 89.99999997819643, 
+        "c": 4.935903613387256, 
+        "b": 3.766548786067065, 
+        "matrix": [
+          [
+            3.4807579, 
+            0.0, 
+            -1.43917136
+          ], 
+          [
+            -0.5950469, 
+            3.42951815, 
+            -1.43917136
+          ], 
+          [
+            0.00291983, 
+            0.00347007, 
+            4.93590153
+          ]
+        ], 
+        "volume": 58.95621384092151, 
+        "alpha": 112.42947981987429, 
+        "beta": 112.42947985291248
+      }, 
+      "sites": [
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.5, 
+            0.5, 
+            0.0
+          ], 
+          "xyz": [
+            1.4428554999999998, 
+            1.714759075, 
+            -1.43917136
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "Al"
+            }
+          ], 
+          "label": "Al"
+        }, 
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.25, 
+            0.75, 
+            0.5
+          ], 
+          "xyz": [
+            0.42536421499999993, 
+            2.5738736474999997, 
+            1.0287794049999999
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "Al"
+            }
+          ], 
+          "label": "Al"
+        }, 
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.75, 
+            0.25, 
+            0.5
+          ], 
+          "xyz": [
+            2.4632666149999998, 
+            0.8591145725, 
+            1.0287794049999999
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "Al"
+            }
+          ], 
+          "label": "Al"
+        }, 
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "xyz": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "V"
+            }
+          ], 
+          "label": "V"
+        }
+      ], 
+      "@class": "Structure", 
+      "@module": "pymatgen.core.structure"
+    }
+}
