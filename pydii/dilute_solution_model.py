@@ -1181,7 +1181,7 @@ def compute_defect_density(structure, e0, vac_defs, antisite_defs, T=800,
     Returns:
         The plot data is generated and returned in asked format.
     """
-    conc_data, en_data, mu_data = dilute_solution_model(
+    conc_data, en_data, mu_data = dilute_solution_model_new(
             structure,e0,vac_defs,antisite_defs,T,
             trial_chem_pot=trial_chem_pot)
 
