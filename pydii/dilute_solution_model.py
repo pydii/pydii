@@ -898,11 +898,14 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
         #for specie-0 at lower yval
         li = specie_site_index_map[0][0]
         hi = specie_site_index_map[0][1]
+        li1 = specie_site_index_map[1][0]
+        hi1 = specie_site_index_map[1][1]
+        spec_mult = [sum(multiplicity[li:hi]), sum(multiplicity[li1:hi1])]
         ln_def_conc = 4.60517
         for i in range(li,hi):
             vac_flip_en =  vac_defs[i]['energy']
             mu_vals = [ln_def_conc*k_B*T -vac_flip_en]
-            mu_vals.append(e0 - mu_vals[0])
+            mu_vals.append((e0 - spec_mult[0]*mu_vals[0]) / spec_mult[1])
             print '1st trial mu_vals', mu_vals
             comp_ratio = yvals[0]
     
@@ -918,8 +921,9 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
             except:     # Go for antisite as dominant defect
                 mu_gs = [Symbol('mu_gs'+j.__str__()) for j in range(m)]
             
-                eqs = [mu_gs[0]-mu_gs[1] - (ln_def_conc*k_B*T-antisite_defs[i]['energy'])]
-                eqs.append(mu_gs[0] + mu_gs[1] - e0)
+                eqs = [mu_gs[0]-mu_gs[1] - (ln_def_conc*k_B*T-antisite_defs[i][
+                    'energy'])]
+                eqs.append(spec_mult[0]*mu_gs[0] + spec_mult[1]*mu_gs[1] - e0)
                 x = solve(eqs, mu_gs)
                 #mu_names = sorted([key.name for key in x.keys()])
                 mu_vals = []
