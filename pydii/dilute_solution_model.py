@@ -630,9 +630,11 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
     comm_div = gcd(*tuple(multiplicity))
     multiplicity = [val/comm_div for val in multiplicity]
     e0 = e0/comm_div
-    T = Integer(T)
+    T = Float(T)
+    #T = Float(1/k_B)
 
-    c0 = np.diag(multiplicity)
+    #c0 = np.diag(multiplicity)
+    c0 = np.diag(np.ones(n))
     #print ('c0',c0)
     mu = [Symbol('mu'+i.__str__()) for i in range(m)]
 
@@ -754,29 +756,43 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
                 #print (i, epi, p, dC[i,epi, p], sum_mu)
                 #c[i,p] += Integer(multiplicity[p]*dC[i,epi,p]) * \
                 #        exp(-(dE[epi,p]-sum_mu)/(k_B*T))
-                flip = Integer(multiplicity[p]*dC[i,epi,p]) * \
+                #flip = Integer(multiplicity[p]*dC[i,epi,p]) * \
+                flip = Integer(dC[i,epi,p]) * \
                         exp(-(dE[epi,p]-sum_mu)/(k_B*T))
                 if flip not in site_flip_contribs:
                     site_flip_contribs.append(flip)
                     c[i,p] += flip
 
-    #print ('c', c)
+    print 'c', c
     total_c = []
     for ind in specie_site_index_map:
-        total_c.append(sum([sum(c[i,:]) for i in range(*ind)]))
+        total_c.append(sum([multiplicity[i]*sum(c[i,:]) for i in range(*ind)]))
     c_ratio = [total_c[-1]/total_c[i] for i in range(m)]
     #print ('c_ratio')
     #for i in range(len(c_ratio)):
     #    print(c_ratio[i])
 
     # Expression for Omega, the Grand Potential
-    omega = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:]) for i in range(n)])
+    omega1 = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:])*multiplicity[i] for i in range(n)])
+    omega2 = []
+    fm_en_eff = []
+    used_dEs = []
     for p_r in range(n):
         for epi in range(n):
             sum_mu = sum([mu[site_mu_map[j]]*Float(
                     dC[j,epi,p_r]) for j in range(n)])
-            omega -= k_B*T*multiplicity[p_r]*exp(-(dE[epi,p_r]-sum_mu)/(k_B*T))
+            if p_r != epi and site_mu_map[p_r] == site_mu_map[epi]:
+                continue
+            if  dE[epi,p_r] not in used_dEs:
+                omega2.append(k_B*T*multiplicity[p_r]*exp(-(dE[epi,p_r]-sum_mu)/(k_B*T)))
+                fm_en_eff.append(dE[epi,p_r]-sum_mu)
+                used_dEs.append(dE[epi, p_r])
+                print epi, p_r, dE[epi,p_r]
+    print 'multiplicity', multiplicity
+    print  'omega2', omega2
+    print 'eff_form_en', fm_en_eff
 
+    omega = omega1-sum(omega2)
     # Compute composition range
     li = specie_site_index_map[0][0]
     hi = specie_site_index_map[0][1]
@@ -917,6 +933,8 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
                 if mu_vals:
                     mu_vals = [float(mu_val) for mu_val in mu_vals]
                     print 'working trial1 mu_vals', mu_vals
+                    #omega_val = omega.subs(dict(zip(mu,mu_val)))
+                    #print 'omega val', omega_val
                 break
             except:     # Go for antisite as dominant defect
                 mu_gs = [Symbol('mu_gs'+j.__str__()) for j in range(m)]
@@ -939,12 +957,25 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
                     if mu_vals:
                         mu_vals = [float(mu_val) for mu_val in mu_vals]
                         print 'working trial2 mu_vals', mu_vals
+                        #omega_val = omega.subs(dict(zip(mu,mu_val)))
+                        #print 'omega val', omega_val
                     break
                 except: # Go to the default option (search the space) 
                     pass
         else:
             mu_vals = compute_mus_by_search()
             print 'working trial search mu_vals', mu_vals
+            #omega_val = omega.subs(dict(zip(mu,mu_val)))
+            #print 'omega val', omega_val
+        print type(mu_vals)
+        omega_val = omega.subs(dict(zip(mu,mu_vals)))
+        omega1_val = omega1.subs(dict(zip(mu,mu_vals)))
+        omega2_val = [omega2[j].subs(dict(zip(mu,mu_vals))) for j in range(len(omega2))]
+        print 'omega val', omega_val,
+        print  omega1_val
+        print  omega2_val
+        c_vals = c.subs(dict(zip(mu,mu_vals)))
+        print 'c val', c_vals
                 
     else:
         try:
@@ -952,24 +983,37 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
         except:
             mu_vals = compute_mus_by_search()
 
+    #sys.exit()
 
 
     # Compile mu's for all composition ratios in the range
     #+/- 1% from the stoichiometry
     result = {}
+    print specie_site_index_map
+    i = 0
+    len_y = len(yvals)
     for y in yvals:
         vector_func = [y-c_ratio[0]]
         vector_func.append(omega)
         try:
-            print 'y:', y,  ', mu_vals: ', mu_vals
             x = nsolve(vector_func,mu,mu_vals,module="numpy")
-            if x:
+            if i == 0 or  i+1==len_y:
                 mu_vals = [float(mu_val) for mu_val in x]
+                omega_val = omega.subs(dict(zip(mu,mu_vals)))
+                omega1_val = omega1.subs(dict(zip(mu,mu_vals)))
+                omega2_val = [omega2[j].subs(dict(zip(mu,mu_vals))) for j in range(len(omega2))]
+                print 'y:', y,  ', mu_vals: ', mu_vals
+                print 'omega val', omega_val, 
+                print  omega1_val 
+                print  omega2_val
+                fm_en_eff_val = [fm_en_eff[j].subs(dict(zip(mu,mu_vals))) for j in range(len(omega2))]
+                print 'eff form_en', fm_en_eff_val
         except:
             print 'failed y', y
             continue
         result[y] = list(x)
         x = None
+        i += 1
 
     #print result[yvals[0]]
 

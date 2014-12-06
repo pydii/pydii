@@ -1,0 +1,20 @@
+{
+  "mp-1487": {
+    "solutes": [
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "Fe", 
+        "site_index": 1, 
+        "site_specie": "Al", 
+        "energy": -2.6337601699999595
+      }, 
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "Fe", 
+        "site_index": 2, 
+        "site_specie": "Ni", 
+        "energy": -2.0707435799999985
+      }
+    ]
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "mp-1487": {
+    "antisites": [
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "Ni", 
+        "site_index": 1, 
+        "site_specie": "Al", 
+        "energy": -1.043459740000003
+      }, 
+      {
+        "site_multiplicity": 1, 
+        "substitution_specie": "Al", 
+        "site_index": 2, 
+        "site_specie": "Ni", 
+        "energy": 3.718746630000055
+      }
+    ], 
+    "vacancies": [
+      {
+        "site_multiplicity": 1, 
+        "site_index": 1, 
+        "site_specie": "Al", 
+        "energy": 6.087312620000034
+      }, 
+      {
+        "site_multiplicity": 1, 
+        "site_index": 2, 
+        "site_specie": "Ni", 
+        "energy": 6.807947819999981
+      }
+    ], 
+    "e0": -10.8390350840625, 
+    "structure": {
+      "lattice": {
+        "a": 2.88646038, 
+        "gamma": 90.0, 
+        "c": 2.88646038, 
+        "b": 2.88646038, 
+        "matrix": [
+          [
+            2.88646038, 
+            0.0, 
+            0.0
+          ], 
+          [
+            0.0, 
+            2.88646038, 
+            0.0
+          ], 
+          [
+            0.0, 
+            0.0, 
+            2.88646038
+          ]
+        ], 
+        "volume": 24.0489878006939, 
+        "alpha": 90.0, 
+        "beta": 90.0
+      }, 
+      "sites": [
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.5, 
+            0.5, 
+            0.5
+          ], 
+          "xyz": [
+            1.44323019, 
+            1.44323019, 
+            1.44323019
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "Al"
+            }
+          ], 
+          "label": "Al"
+        }, 
+        {
+          "properties": {
+            "coordination_no": 10, 
+            "forces": [
+              0.0, 
+              0.0, 
+              0.0
+            ]
+          }, 
+          "abc": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "xyz": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "species": [
+            {
+              "occu": 1, 
+              "element": "Ni"
+            }
+          ], 
+          "label": "Ni"
+        }
+      ], 
+      "@class": "Structure", 
+      "@module": "pymatgen.core.structure"
+    }
+  }
+}
