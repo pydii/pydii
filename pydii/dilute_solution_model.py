@@ -766,7 +766,14 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
     print 'c', c
     total_c = []
     for ind in specie_site_index_map:
-        total_c.append(sum([multiplicity[i]*sum(c[i,:]) for i in range(*ind)]))
+        #total_c.append(sum([multiplicity[i]*sum(c[i,:]) for i in range(*ind)]))
+        val = 0
+        for i in range(*ind):
+            sum_i = sum([c[i,j]*multiplicity[j] for j in range(n)])
+            val += sum_i
+        total_c.append(val)
+
+        #total_c.append(sum([multiplicity[i]*sum(c[i,:]) for i in range(*ind)]))
     c_ratio = [total_c[-1]/total_c[i] for i in range(m)]
     #print ('c_ratio')
     #for i in range(len(c_ratio)):
