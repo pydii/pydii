@@ -999,6 +999,7 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
     print specie_site_index_map
     i = 0
     len_y = len(yvals)
+    failed_y, failed_i = [], []
     for y in yvals:
         vector_func = [y-c_ratio[0]]
         vector_func.append(omega)
@@ -1017,10 +1018,96 @@ def dilute_solution_model_new(structure, e0, vac_defs, antisite_defs, T,
                 print 'eff form_en', fm_en_eff_val
         except:
             print 'failed y', y
+            failed_y.append(y)
+            failed_i.append(i)
             continue
         result[y] = list(x)
         x = None
         i += 1
+
+    def get_next_mu_val(i):
+        #print i, len(yvals)
+        if i >= len(yvals):
+            return None
+        y =  yvals[i+1]
+        #print 'y', y
+        x = result.get(y,None)
+        #print 'mu_val', x
+        if x:
+            mu_vals = [float(mu_val) for mu_val in x]
+            return mu_vals
+        else:
+            return get_next_mu_val(i+1)
+
+    def get_prev_mu_val(i):
+        if i <= 0:
+            return None
+
+        y =  yvals[i-1]
+        x = result.get(y,None)
+        if x:
+            mu_vals = [float(mu_val) for mu_val in x]
+            return mu_vals
+        else:
+            return get_next_mu_val(i-1)
+
+    # Try to get better trial mus for failed cases
+    #print 'len', len(result.keys())
+    for j in range(len(failed_y)):
+        i = failed_i[j]
+        #print 'i', i
+        prev_mu_val = get_prev_mu_val(i)
+        if not prev_mu_val:
+            continue
+        #print 'prev', prev_mu_val
+        next_mu_val = get_next_mu_val(i)
+        if not next_mu_val:
+            continue
+        #print 'next', next_mu_val
+        y = failed_y[j]
+        #print 'y', y
+        vector_func = [y-c_ratio[0]]
+        vector_func.append(omega)
+        trial_mu = list(map(lambda x: float(sum(x))/len(x),  \
+                zip(prev_mu_val,next_mu_val)))
+        #print 'trial_mu', trial_mu
+        try:
+            x = nsolve(vector_func,mu,trial_mu,module="numpy")
+            if x:
+                mu_vals = [float(mu_val) for mu_val in x]
+        except:
+            continue
+        #print 'mu_vals', mu_vals
+        result[y] = mu_vals
+        x = None
+
+    #print 'len', len(result.keys())
+    #for j in range(len(failed_y)):
+    #    y = yvals[0]
+    #    print 'yvals[0]', y
+    #    prev_mu_val = result[y]
+    #    print 'prev_mu', prev_mu_val
+    #    y = yvals[-1]
+    #    print 'yvals[-1]', y
+    #    next_mu_val = result[y]
+    #    print 'next_mu', next_mu_val
+    #    trial_mu = list(map(lambda x: float(sum(x))/len(x),  \
+    #            zip(prev_mu_val,next_mu_val)))
+    #    print 'trial_mu', trial_mu
+    #    y = failed_y[j]
+    #    print 'failed_y', y
+    #    vector_func = [y-c_ratio[0]]
+    #    vector_func.append(omega)
+    #    try:
+    #        x = nsolve(vector_func,mu,trial_mu,module="numpy")
+    #        if x:
+    #            mu_vals = [float(mu_val) for mu_val in x]
+    #            print 'final mus', mu_vals
+    #    except:
+    #        print 'failed in 2nd round too'
+    #        continue
+    #    result[y] = list(mu_vals)
+
 
     #print result[yvals[0]]
 
