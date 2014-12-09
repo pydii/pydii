@@ -10,9 +10,8 @@ pydii requires pymatgen, sympy and monty packages.
 
 Installation
 ------------
-Download the pydii git repo from github using the command::
-
-    git clone https://github.com/mbkumar/pydii.git
+Download the pydii git repo from github using the command
+    ``git clone https://github.com/mbkumar/pydii.git``
 
 Go to pydii root directory by typing::
 
