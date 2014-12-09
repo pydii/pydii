@@ -8,16 +8,17 @@ Installation
 ------------
 pydii requires pymatgen, sympy and monty packages. 
 
-Installation
+Source Code
 ------------
-
+If not available already, 
 #. Install `git <http://git-scm.com>`_, if not already packaged with your system.
 
 #. Download the pydii source code using the command::
 
     git clone https://github.com/mbkumar/pydii.git
 
-
+Source Code
+------------
 #. Navigate to pydii root directory::
 
     cd pydii
