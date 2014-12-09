@@ -109,7 +109,7 @@ class DiluteSolutionModelSiteMultiplicityTest(unittest.TestCase):
         self.assertIsNotNone(chem_pot)
 
     def test_plot_data_without_chem_pot(self):
-        conc_data, en_data, mu_data = dilute_solution_model_new(
+        conc_data, en_data, mu_data = dilute_solution_model(
             self.struct,self.e0,self.vac,self.asites,self.T,generate='plot')
         self.assertIsNotNone(conc_data)
         self.assertIsNotNone(en_data)
@@ -143,7 +143,7 @@ class DiluteSolutionModel1487Test(unittest.TestCase):
         self.assertIsNotNone(chem_pot)
 
     def test_plot_data_without_chem_pot(self):
-        conc_data, en_data, mu_data = dilute_solution_model_new(
+        conc_data, en_data, mu_data = dilute_solution_model(
             self.struct,self.e0,self.vac,self.asites,self.T,generate='plot')
         self.assertIsNotNone(conc_data)
         self.assertIsNotNone(en_data)
