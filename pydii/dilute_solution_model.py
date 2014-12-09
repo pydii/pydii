@@ -233,7 +233,8 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T,
     c_ratio = [total_c[-1]/total_c[i] for i in range(m)]
 
     # Expression for Omega, the Grand Potential
-    omega1 = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:])*multiplicity[i] for i in range(n)])
+    omega1 = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:])*multiplicity[i] \
+                       for i in range(n)])
     omega2 = []
     fm_en_eff = []
     used_dEs = []
@@ -244,7 +245,8 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T,
             if p_r != epi and site_mu_map[p_r] == site_mu_map[epi]:
                 continue
             if  dE[epi,p_r] not in used_dEs:
-                omega2.append(k_B*T*multiplicity[p_r]*exp(-(dE[epi,p_r]-sum_mu)/(k_B*T)))
+                omega2.append(k_B*T*multiplicity[p_r] * \
+                              exp(-(dE[epi,p_r]-sum_mu)/(k_B*T)))
                 fm_en_eff.append(dE[epi,p_r]-sum_mu)
                 used_dEs.append(dE[epi, p_r])
     omega = omega1-sum(omega2)
@@ -1183,6 +1185,434 @@ def solute_site_preference_finder(
 
     return plot_data
 
+def solute_site_preference_finder_new(
+        structure, e0, T, vac_defs, antisite_defs,  solute_defs,
+        solute_concen=0.01, trial_chem_pot = None):
+
+    """
+    Compute the solute defect densities using dilute solution model.
+    Args:
+        structure: pymatgen.core.structure.Structure object representing the
+            primitive or unitcell of the crystal.
+        e0: The total energy of the undefected system.
+            This is E0 from VASP calculation.
+        T: Temperature in Kelvin
+        vac_defs: List of vacancy defect parameters in the dictionary format.
+            The keys of the dict associated with each vacancy defect are
+            1) site_index, 2) site_specie, 3) site_multiplicity, and
+            4) energy. 1-3 can be obtained from
+            pymatgen.analysis.defects.point_defects.Vacancy class.
+            Site index is expected to start with 1 (fortran index).
+        antisite_defs: List of antisite defect parameters in the dictionary
+            format. The keys of the dict associated with each antisite
+            defect are 1) site_index, 2) site_specie, 3) site_multiplicity,
+            4) substitution_specie, and 5) energy. 1-3 can be obtained
+            from pymatgen.analysis.defects.point_defects.Vacancy class.
+        solute_defs: List of solute defect parameters in the dictionary
+            format. Similary to that of antisite defs, wtih solute specie
+            specified in substitution_specie
+        solute_concen: Solute concentration (in fractional value)
+        trial_chem_pot: Trial chemical potentials to speedup the plot
+            generation. Format is {el1:mu1,...}
+
+    Returns:
+        plot_data: The data for plotting the solute defect concentration.
+    """
+
+    if not check_input(vac_defs):
+        raise ValueError('Vacancy energy is not defined')
+    if not check_input(antisite_defs):
+        raise ValueError('Antisite energy is not defined')
+
+    formation_energies = {}
+    formation_energies['vacancies'] = copy.deepcopy(vac_defs)
+    formation_energies['antisites'] = copy.deepcopy(antisite_defs)
+    formation_energies['solute'] = copy.deepcopy(solute_defs)
+    for vac in formation_energies['vacancies']:
+        del vac['energy']
+    for asite in formation_energies['antisites']:
+        del asite['energy']
+    for solute in formation_energies['solute']:
+        del solute['energy']
+    # Setup the system
+    site_species = [vac_def['site_specie'] for vac_def in vac_defs]
+    solute_specie = solute_defs[0]['substitution_specie']
+    site_species.append(solute_specie)
+    multiplicity = [vac_def['site_multiplicity'] for vac_def in vac_defs]
+    m = len(set(site_species))      # distinct species
+    n = len(vac_defs)           # inequivalent sites
+
+    # Reduce the system and associated parameters such that only distinctive
+    # atoms are retained
+    comm_div = gcd(*tuple(multiplicity))
+    multiplicity = [val/comm_div for val in multiplicity]
+    multiplicity.append(0)
+    e0 = e0/comm_div
+    T = Float(T)
+
+    #c0 = np.diag(multiplicity)
+    c0 = np.diag(np.ones(n))
+    #print(('c0', c0))
+    mu = [Symbol('mu'+str(i)) for i in range(m)]
+
+    # Generate maps for hashing
+    # Generate specie->mu map and use it for site->mu map
+    specie_order = []       # Contains hash for site->mu map    Eg: [Al, Ni]
+    site_specie_set = set()             # Eg: {Ni, Al}
+    for i in range(len(site_species)):
+        site_specie  = site_species[i]
+        if site_specie not in site_specie_set:
+            site_specie_set.add(site_specie)
+            specie_order.append(site_specie)
+    site_mu_map = []     # Eg: [mu0,mu0,mu0,mu1] where mu0->Al, and mu1->Ni
+    for i in range(len(site_species)):
+        site_specie  = site_species[i]
+        j = specie_order.index(site_specie)
+        site_mu_map.append(j)
+    specie_site_index_map = []      # Eg: [(0,3),(3,4)] for Al & Ni
+    for i in range(m):
+        low_ind = site_species.index(specie_order[i])
+        if i < m-1:
+            hgh_ind = site_species.index(specie_order[i+1])
+        else:
+            hgh_ind = len(site_species)
+        specie_site_index_map.append((low_ind,hgh_ind))
+
+    """
+    dC: delta concentration matrix:
+    dC[i,j,k]: Concentration change of atom i, due to presence of atom
+    j on lattice site k
+    Special case is [i,i,i] which is considered as vacancy
+    Few cases: dC[i,i,i] = -1 due to being vacancy special case
+                dC[k,k,i] = +1 due to increment in k at i lattice if i
+                               lattice type is of different element
+                dC[i,k,i] = -1 due to decrement of ith type atom due to
+                presence of kth type atom on ith sublattice and kth type
+                atom specie is different from ith sublattice atom specie
+                dC[i,k,k] = 0 due to no effect on ith type atom
+                dC[i,j,k] = 0 if i!=j!=k
+    """
+    dC = np.zeros((n+1,n+1,n), dtype=np.int)
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                if i == j and site_species[j] != site_species[k] and \
+                        site_species[i] != site_species:
+                    dC[i,j,k] = 1
+        for j in range(n+1):
+            for k in range(n):
+                if i == k:
+                    dC[i,j,k] = -1
+    for k in range(n):
+        dC[n,n,k] = 1
+    for k in range(n):
+        for j in range(n):
+            if i != j:
+                if site_species[i] == site_species[k]:
+                    dC[i,j,k] = 0
+
+    for ind_map in specie_site_index_map:
+        if ind_map[1]-ind_map[0] > 1:
+            for index1 in range(ind_map[0]+1,ind_map[1]):
+                for index2 in range(ind_map[0]):
+                    for i in range(n):
+                        #print (i, index1, index2)
+                        dC[i,index1,index2] = 0
+                for index2 in range(ind_map[1],n):
+                    for i in range(n):
+                        #print (i, index1, index2)
+                        dC[i,index1,index2] = 0
+
+    #print ('dC', dC)
+    # dE matrix: Flip energies (or raw defect energies)
+    els = [vac_def['site_specie'] for vac_def in vac_defs]
+    dE = []
+    for i in range(n+1):
+        dE.append([])
+    for i in range(n+1):
+        for j in range(n):
+            dE[i].append(0)
+
+    for j in range(n):
+        for i in range(n):
+            if i == j:
+                dE[i][j] = vac_defs[i]['energy']
+            else:
+                sub_specie = vac_defs[i]['site_specie']
+                site_specie = vac_defs[j]['site_specie']
+                if site_specie == sub_specie:
+                    dE[i][j] = 0
+                else:
+                    for as_def in antisite_defs:
+                        if int(as_def['site_index']) == j+1 and \
+                                sub_specie == as_def['substitution_specie']:
+                            dE[i][j] = as_def['energy']
+                            break
+        # Solute
+        site_specie = vac_defs[j]['site_specie']
+        for solute_def in solute_defs:
+            def_site_ind = int(solute_def['site_index'])
+            def_site_specie = solute_def['site_specie']
+            #print((def_site_specie, site_specie))
+            #print((def_site_ind, j+1))
+            if def_site_specie == site_specie and def_site_ind == j+1:
+                #print(('se', solute_def['energy']))
+                dE[n][j] = solute_def['energy']
+                break
+
+    dE = np.array(dE)
+    #np.where(dE == np.array(None), 0, dE)
+
+    # Initialization for concentrations
+    # c(i,p) == presence of ith type atom on pth type site
+    c = Matrix(n+1,n,[0]*n*(n+1))
+    for i in range(n+1):
+        for p in range(n):
+            c[i,p] = Integer(c0[i,p])
+            #print((c[i,p]))
+            site_flip_contribs = []
+            for epi in range(n+1):
+                sum_mu = sum([mu[site_mu_map[j]]*Integer(
+                        dC[j,epi,p]) for j in range(n+1)])
+                #print((sum_mu))
+                #print((multiplicity[p], dC[i,epi,p], dE[epi,p]))
+                flip = dC[i,epi,p] * exp(-(dE[epi,p]-sum_mu)/(k_B*T))
+                if flip not in site_flip_contribs:
+                    site_flip_contribs.append(flip)
+                    c[i,p] += flip
+    #print(("--------c---------"))
+    #for i in range(n+1):
+    #    print((c[i,:]))
+    #print(("--------c---------"))
+
+    #specie_concen = [sum(mult[ind[0]:ind[1]]) for ind in specie_site_index_map]
+    #total_c = [sum(c[ind[0]:ind[1]]) for ind in specie_site_index_map]
+    total_c = []
+    for ind in specie_site_index_map:
+        val = 0
+        for i in range(*ind):
+            sum_i = sum([c[i,j]*multiplicity[j] for j in range(n)])
+            val += sum_i
+        total_c.append(val)
+    
+    c_ratio = [total_c[i]/sum(total_c) for i in range(m)]
+    #print(('-------c_ratio-------------'))
+    #for i in range(m):
+    #    print((c_ratio[i]))
+
+    # Expression for Omega, the Grand Potential
+    omega = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:])*multiplicity[i] \
+            for i in range(n+1)])
+    use_dEs = []
+    for p_r in range(n):
+        for epi in range(n):
+            sum_mu = sum([mu[site_mu_map[j]]*Integer(
+                    dC[j,epi,p_r]) for j in range(n+1)])
+            if p_r != epi and site_mu_map[p_r] == site_mu_map[epi]:
+                continue
+            if dE[epi,p_r] not in used_dEs:
+                omega -= k_B*T*multiplicity[p_r] * \
+                        exp(-(dE[epi,p_r]-sum_mu)/(k_B*T))
+                used_dEs.append(dE[epi,p_r])
+
+    #print ('omega')
+    #print (omega)
+    def compute_mus():
+
+        def reduce_mu():
+            host_concen = 1-solute_concen
+            new_c0 = c0.astype(float)
+            for i in range(n):
+                new_c0[i,i] = host_concen*c0[i,i]
+            new_c0[n,n] = 2*solute_concen
+            omega = [
+                e0-sum([mu[site_mu_map[i]]*sum(new_c0[i,:])
+                    for i in range(n+1)])]
+            x = solve(omega)
+            return x
+
+        # Compute trial mu
+        mu_red = reduce_mu()
+        #print(('mu_red', mu_red))
+
+        mult = multiplicity
+        #for ind in specie_site_index_map:
+        #    print(ind[0], ind[1])
+        specie_concen = [
+            sum(mult[ind[0]:ind[1]]) for ind in specie_site_index_map]
+        #print('specie_concen', specie_concen)
+        max_host_specie_concen = 1-solute_concen
+        host_specie_concen_ratio = [specie_concen[i]/sum(specie_concen)* \
+                                    max_host_specie_concen for i in range(m)]
+        host_specie_concen_ratio[-1] = solute_concen
+        #print('hostspecie_concen_rat', host_specie_concen_ratio)
+
+
+        y_vect = host_specie_concen_ratio
+        #print(('y_vect', y_vect))
+        vector_func = [y_vect[i]-c_ratio[i] for i in range(m)]
+        vector_func.append(omega)
+        #print((vector_func))
+        mu_vals = None
+        c_val = None
+        m_min = -15.0
+        if e0 > 0:
+            m_max = 10            # Search space needs to be modified
+        else:
+            m_max = 0
+        for m1 in np.arange(m_min,m_max,0.3):
+            for m2 in np.arange(m_min,m_max,0.3):
+                m0 = mu_red[mu[0]].subs([(mu[1],m1),(mu[2],m2)])
+                try:
+                    #print(m1,m2)
+                    mu_vals = nsolve(vector_func,mu,[m0,m1,m2],module="numpy")
+                    #mu_vals = nsolve(vector_func,mu,[m0,m1,m2])
+                    # Line needs to be modified to include all mus when n > 2
+                except:
+                    continue
+                break
+            if mu_vals:
+                mu_vals = [float(mu_val) for mu_val in mu_vals]
+                break
+        else:
+            raise ValueError("Couldn't find mus")
+        #print (('mu_vals', mu_vals))
+        return mu_vals
+
+    if not trial_chem_pot:
+        mu_vals = compute_mus()
+    else:
+        try:
+            mu_vals = [trial_chem_pot[element] for element in specie_order]
+        except:
+            mu_vals = compute_mus()
+    #print(('mu_vals', mu_vals))
+
+
+    # Compute ymax
+    max_host_specie_concen = 1-solute_concen
+    mult = multiplicity
+    specie_concen = [
+            sum(mult[ind[0]:ind[1]]) for ind in specie_site_index_map]
+    host_specie_concen_ratio = [specie_concen[i]/sum(specie_concen)* \
+                                max_host_specie_concen for i in range(m)]
+    host_specie_concen_ratio[-1] = solute_concen
+    #print('hostspecie_concen_rat', host_specie_concen_ratio)
+    li = specie_site_index_map[0][0]
+    hi = specie_site_index_map[0][1]
+    comp1_min = sum(multiplicity[li:hi])/sum(multiplicity)* \
+                max_host_specie_concen - 0.01
+    comp1_max = sum(multiplicity[li:hi])/sum(multiplicity)* \
+                max_host_specie_concen + 0.01
+    #print(ymin, ymax)
+    delta = (comp1_max - comp1_min)/50.0
+
+    #for i in range(len(mu)):
+    #    print(mu[i], mu_vals[i])
+
+    # Compile mu's for all composition ratios in the range
+    #+/- 1% from the stoichiometry
+    result = {}
+    for y in np.arange(comp1_min,comp1_max+delta,delta):
+        result[y] = []
+        y_vect = []
+        y_vect.append(y)
+        y2 = max_host_specie_concen - y
+        y_vect.append(y2)
+        y_vect.append(solute_concen)
+        #print ('y_vect', y_vect)
+        vector_func = [y_vect[i]-c_ratio[i] for i in range(1,m)]
+        vector_func.append(omega)
+        #try:
+        #print (vector_func)
+        #print (mu)
+        #print (mu_vals)
+
+        x = nsolve(vector_func,mu,mu_vals,module="numpy")
+        #x = nsolve(vector_func,mu,mu_vals)
+        #except:
+        #    del result[y]
+        #    continue
+
+        result[y].append(x[0])
+        result[y].append(x[1])
+        result[y].append(x[2])
+
+
+    res = []
+
+    #print ('result', result.keys())
+    # Compute the concentrations for all the compositions
+    for key in sorted(result.keys()):
+        mu_val = result[key]
+        total_c_val = [total_c[i].subs(dict(zip(mu,mu_val))) \
+                for i in range(len(total_c))]
+        c_val = c.subs(dict(zip(mu,mu_val)))
+        #print ('c_val', c_val)
+        # Concentration of first element/over total concen
+        res1 = []
+        res1.append(float(total_c_val[0]/sum(total_c_val)))
+
+        sum_c0 = sum([c0[i,i] for i in range(n)])
+        #print ('c_val_n_0', c_val[n,0])
+        #print ('c_val_n_1', c_val[n,1])
+        for i in range(n+1):
+            for j in range(n):
+                if i == j:              # Vacancy
+                    #res1.append(float((c0[i,i]-sum(c_val[:,i]))/c0[i,i]))
+                    vac_conc = float(exp(-(mu_val[site_mu_map[i]]+dE[i,i])/(k_B*T)))
+                    res1.append(vac_conc)
+                else:                   # Antisite
+                    res1.append(float(c_val[i,j]/c0[j,j]))
+        res.append(res1)
+
+    #print ('c0', c0)
+    #print ('res', res)
+    res = np.array(res)
+    #print ('res', res)
+    dtype = [(str('x'),np.float64)]+[(str('y%d%d' % (i, j)), np.float64) \
+            for i in range(n+1) for j in range(n)]
+    res1 = np.sort(res.view(dtype),order=[str('x')],axis=0)
+
+    conc = []
+    for i in range(n+1):
+        conc.append([])
+        for j in range(n):
+            conc[i].append([])
+    #print(conc)
+    for i in range(n+1): # Append vacancies
+        for j in range(n):
+            y1 = [dat[0][i*n+j+1] for dat in res1]
+            conc[i][j] = y1
+    #print(type(conc[i][j]))
+
+    plot_data = {}
+    """Because all the plots have identical x-points storing it in a
+    single array"""
+    #for dat in res1:
+    #    print dat
+    plot_data['x'] = [dat[0][0] for dat in res1]         # x-axis data
+    # Element whose composition is varied. For x-label
+    plot_data['x_label'] = els[0]+ "_mole_fraction"
+    plot_data['y_label'] = "Fraction of {} at {} sites".format(
+        solute_specie,els[0])
+
+    y_data = []
+    #for i in range(n):      # Vacancy plots
+    inds = specie_site_index_map[m-1]
+    #print ('inds', inds)
+    data1 = np.sum([conc[ind][0] for ind in range(*inds)],axis=0)
+    #print ('data1', data1)
+    data2 = np.sum([conc[ind][1] for ind in range(*inds)],axis=0)
+    #print ('data2', data2)
+    frac_data = data1/(data1+data2)
+    #print ('frac_data', frac_data)
+    frac_data = frac_data.tolist()
+    y_data.append({'data':frac_data})
+
+    plot_data['y'] = y_data
+
+    return plot_data
 
 @requires(sympy_found,
           "solute_defect_density requires Sympy module. Please install it.")
@@ -1224,7 +1654,7 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
         The plot data is generated and returned in asked format.
     """
 
-    solute_conc_data = solute_site_preference_finder(
+    solute_conc_data = solute_site_preference_finder_new(
         structure, e0, T, vac_defs, antisite_defs, solute_defs,
         solute_concen=solute_concen, trial_chem_pot=trial_chem_pot)
 
