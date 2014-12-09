@@ -1251,8 +1251,9 @@ def solute_site_preference_finder_new(
     T = Float(T)
 
     #c0 = np.diag(multiplicity)
-    c0 = np.diag(np.ones(n))
-    #print(('c0', c0))
+    c0 = np.diag(np.ones(n+1))
+    c0[n,n] = 0
+    print(('c0', c0))
     mu = [Symbol('mu'+str(i)) for i in range(m)]
 
     # Generate maps for hashing
@@ -1403,7 +1404,7 @@ def solute_site_preference_finder_new(
     # Expression for Omega, the Grand Potential
     omega = e0 - sum([mu[site_mu_map[i]]*sum(c0[i,:])*multiplicity[i] \
             for i in range(n+1)])
-    use_dEs = []
+    used_dEs = []
     for p_r in range(n):
         for epi in range(n):
             sum_mu = sum([mu[site_mu_map[j]]*Integer(
