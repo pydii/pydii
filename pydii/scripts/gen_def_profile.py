@@ -24,7 +24,7 @@ from argparse import ArgumentParser
 
 from monty.serialization import loadfn, dumpfn
 from monty.json import MontyEncoder, MontyDecoder
-from pymatgen.analysis.defects.dilute_solution_model import \
+from pydii.dilute_solution_model import \
         solute_site_preference_finder, compute_defect_density, \
         solute_defect_density
 
@@ -115,13 +115,13 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
 
     print trial_chem_pot
     try:
-        sol_conc = solute_defect_density(struct, e0, vacs, antisites, solutes,
+        sol_site_pref, def_conc = solute_defect_density(struct, e0, vacs, antisites, solutes,
                         solute_concen=solute_conc, T=T, 
                         trial_chem_pot=trial_chem_pot, plot_style="gnuplot")
         #sol_conc = solute_site_preference_finder(struct, e0, T, vacs, 
         #        antisites, solutes, solute_conc)#, 
                 #trial_chem_pot={'Al':-4.120, 'Ni':-6.5136, 'Ti':-7.7861})
-        return sol_conc
+        return sol_site_pref, def_conc
     except:
         raise
 
@@ -208,7 +208,7 @@ def im_sol_sub_def_profile():
     if not args.mpid:
         print ('===========\nERROR: mpid is not given.\n===========')
         return
-    if not args.T:
+    if not args.temp:
         print ('===========\nERROR: Temperature is not given.\n===========')
         return
     if not args.solute:
@@ -228,21 +228,19 @@ def im_sol_sub_def_profile():
     else:
         trail_chem_pot = None
 
-    conc_dat = get_solute_def_profile(args.mpid, args.solute, sol_conc, 
-            args.T, def_file, sol_file, trial_chem_pot=trail_chem_pot)
+    solute_site_pref, pt_def_conc = get_solute_def_profile(
+            args.mpid, args.solute, sol_conc, args.temp, def_file, 
+            sol_file, trial_chem_pot=trail_chem_pot)
 
-    if conc_dat:
-        #print plot_dict.keys()
-        #for key in plot_dict:
-        #    print key, type(key)
-        #    print plot_dict[key]
+    if solute_site_pref:
         fl_nm = args.mpid+'_solute-'+args.solute+'_site_pref.dat'
-        #fl_nm = args.mpid+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
-            for row in conc_dat:
+            for row in solute_site_pref:
                 print >> fp, row
-        #with open(fl_nm,'w') as fp:
-        #    json.dump(plot_dict,fp,indent=2)
+        fl_nm = args.mpid+'_solute-'+args.solute+'_def_concentration.dat'
+        with open(fl_nm,'w') as fp:
+            for row in pt_def_conc:
+                print >> fp, row
 
 
 if __name__ == '__main__':
