@@ -194,14 +194,7 @@ def im_vac_antisite_def_energy_parse():
 
     args = parser.parse_args()
 
-    print args
     energy_dict = vac_antisite_def_parse_energy(args.mpid, args.mapi_key)
-    print type(energy_dict)
-    for key,value in energy_dict.items():
-        print key
-        print type(key), type(value)
-        for key2, val2 in value.items():
-            print type(key2), type(val2)
     if energy_dict:
         fl_nm = args.mpid+'_raw_defect_energy.json'
         dumpfn(energy_dict, fl_nm, cls=MontyEncoder, indent=2)
@@ -229,7 +222,6 @@ def im_sol_sub_def_energy_parse():
                  "www.materialsproject.org/opne")
     
     args = parser.parse_args()
-    print args
 
     energy_dict = solute_def_parse_energy(args.mpid, args.solute, 
             args.mapi_key)

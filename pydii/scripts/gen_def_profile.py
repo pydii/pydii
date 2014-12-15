@@ -31,7 +31,6 @@ from pydii.dilute_solution_model import \
 def get_def_profile(mpid, T,  file):
 
     raw_energy_dict = loadfn(file,cls=MontyDecoder)
-    print raw_energy_dict[mpid].keys()
 
     e0 = raw_energy_dict[mpid]['e0']
     struct = raw_energy_dict[mpid]['structure']
@@ -60,7 +59,6 @@ def get_solute_def_profile1(mpid, solute, solute_conc, T, def_file, sol_file):
     sol_raw_energy_dict = loadfn(sol_file,cls=MontyDecoder)
 
     #try:
-    print raw_energy_dict[mpid].keys()
     e0 = raw_energy_dict[mpid]['e0']
     struct = raw_energy_dict[mpid]['structure']
     vacs = raw_energy_dict[mpid]['vacancies']
@@ -94,7 +92,6 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
     sol_raw_energy_dict = loadfn(sol_file,cls=MontyDecoder)
 
     #try:
-    print raw_energy_dict[mpid].keys()
     e0 = raw_energy_dict[mpid]['e0']
     struct = raw_energy_dict[mpid]['structure']
     vacs = raw_energy_dict[mpid]['vacancies']
@@ -113,7 +110,6 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
             print 'All solute defect energies not preset'
             continue
 
-    print trial_chem_pot
     try:
         sol_site_pref, def_conc = solute_defect_density(struct, e0, vacs, antisites, solutes,
                         solute_concen=solute_conc, T=T, 
@@ -152,7 +148,6 @@ def im_vac_antisite_def_profile():
 
     args = parser.parse_args()
 
-    print args
     if not args.mpid:
         print ('===========\nERROR: mpid is not given.\n===========')
         return
@@ -203,7 +198,6 @@ def im_sol_sub_def_profile():
             help="Trial chemcal potential in dict format stored in file")
 
     args = parser.parse_args()
-    print args
 
     if not args.mpid:
         print ('===========\nERROR: mpid is not given.\n===========')

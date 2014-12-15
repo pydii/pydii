@@ -33,7 +33,6 @@ def get_sc_scale(inp_struct, final_site_no):
 
 
 def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
-    print (mpid, mapi_key, cellmax)
     if not mpid:
         print ("============\nERROR: Provide an mpid\n============")
         return
@@ -44,8 +43,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     else:
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
-
-    print (struct.formula)
 
     struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
     sc_scale = get_sc_scale(struct,cellmax)
@@ -69,7 +66,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
               "refer to pymatgen documentation for configuring the settings.")
         ptcr_flag = False
 
-    print (ptcr_flag)
 
     vac = Vacancy(struct, {}, {})
     scs = vac.make_supercells_with_defects(sc_scale)
@@ -89,14 +85,12 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         if ptcr_flag:
             potcar = mpvis.get_potcar(sc)
 
-        #print sc
         interdir = mpid
         if not i:
             fin_dir = os.path.join(interdir,'bulk')
             try:
                 os.makedirs(fin_dir)
             except:
-                #print 'Failed creating ',fin_dir
                 pass
             incar.update(blk_vasp_incar_param)
             incar.write_file(os.path.join(fin_dir,'INCAR'))
@@ -119,7 +113,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
             try:
                 os.makedirs(fin_dir)
             except:
-                #print 'Failed creating ',fin_dir
                 pass
             incar.update(def_vasp_incar_param)
             poscar.write_file(os.path.join(fin_dir,'POSCAR'))
@@ -143,7 +136,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
                 try:
                     os.makedirs(fin_dir)
                 except:
-                    #print 'Failed creating ',fin_dir
                     pass
                 poscar.write_file(os.path.join(fin_dir,'POSCAR'))
                 incar.write_file(os.path.join(fin_dir,'INCAR'))
@@ -152,7 +144,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
                 kpoints.write_file(os.path.join(fin_dir,'KPOINTS'))
 
 def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
-    print (mpid, solute, mapi_key, cellmax)
     if not mpid:
         print ("============\nERROR: Provide an mpid\n============")
         return
@@ -166,8 +157,6 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     else:
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
-
-    print (struct.formula)
 
     mpvis = MPGGAVaspInputSet()
 
@@ -189,8 +178,6 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
               "refer to pymatgen documentation for configuring the settings.")
         ptcr_flag = False
 
-    print (ptcr_flag)
-
     vac = Vacancy(struct, {}, {})
     sc_scale = get_sc_scale(struct,cellmax)
     scs = vac.make_supercells_with_defects(sc_scale)
@@ -200,7 +187,6 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
             i = sc_scale.index(max_sc_dim)
             sc_scale[i] -= 1
             scs = vac.make_supercells_with_defects(sc_scale)
-    print len(scs)
 
     interdir = mpid
     blk_str_sites = set(scs[0].sites)
@@ -265,7 +251,6 @@ def im_vac_antisite_def_struct_gen():
                  "may vary from the provided number including the default.")
     
     args = parser.parse_args()
-    print args
     vac_antisite_def_struct_gen(args.mpid, args.mapi_key, args.cellmax)
 
 def im_sol_sub_def_struct_gen():
@@ -297,7 +282,6 @@ def im_sol_sub_def_struct_gen():
                  "may vary from the provided number including the default.")
     
     args = parser.parse_args()
-    print args
     substitute_def_struct_gen(args.mpid,args.solute,args.mapi_key,args.cellmax)
 
 if __name__ == '__main__':
