@@ -160,12 +160,12 @@ def im_vac_antisite_def_profile():
         file = args.mpid+'_raw_defect_energy.json'
     else:
         file = args.file
-    if not args.T:
+    if not args.temp:
         print ('===========\nERROR: Temperature is not given.\n===========')
         return
 
 
-    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.T,  file)
+    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.temp,  file)
     if conc_dat:
         fl_nm = args.mpid+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
