@@ -10,13 +10,24 @@ pydii requires pymatgen, sympy and monty packages.
 
 Source Code
 ------------
+Obtaining
+~~~~~~~~~
 If not available already, use the following steps.
 
 #. Install `git <http://git-scm.com>`_, if not already packaged with your system.
 
 #. Download the pydii source code using the command::
 
-    git clone https://github.com/mbkumar/pydii.git
+    git clone https://github.com/pydii/pydii.git
+Description
+~~~~~~~~~~~
+PyDII source code is in the folder ROOT_FOLDR/pydii. The ROOT_FOLDR 
+is also named pydii. The root folder additional files for setup and one Examples 
+folder that can be used to test run the code. 
+
+Within the pydii folder, the essential functionality is implemented in 
+dilute_solution_model.py. Scripts to generate input files for VASP calculations,
+parsing vasp runs, and generate defect concentrations are in the scripts subfolder.
 
 Installation
 ------------
