@@ -44,7 +44,10 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
 
+    prim_struct_sites = len(struct.sites)
     struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
+    conv_struct_sites = len(struct.sites)
+    conv_prim_rat = int(conv_struct_sites/prim_struct_sites)
     sc_scale = get_sc_scale(struct,cellmax)
 
     mpvis = MPGGAVaspInputSet()
@@ -75,7 +78,6 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         i = sc_scale.index(max_sc_dim)
         sc_scale[i] -= 1
         scs = vac.make_supercells_with_defects(sc_scale)
-    print ("No. of atoms in supercell", scs[0].num_sites)
 
     for i in range(len(scs)):
         sc = scs[i]
@@ -103,7 +105,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
             vac_str_sites = set(sc.sites)
             vac_sites = blk_str_sites - vac_str_sites
             vac_site = list(vac_sites)[0]
-            site_mult = vac.get_defectsite_multiplicity(i-1)
+            site_mult = int(vac.get_defectsite_multiplicity(i-1)/conv_prim_rat)
             vac_site_specie = vac_site.specie
             vac_symbol = vac_site.specie.symbol
 
@@ -157,6 +159,10 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     else:
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
+    prim_struct_sites = len(struct.sites)
+    struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
+    conv_struct_sites = len(struct.sites)
+    conv_prim_rat = int(conv_struct_sites/prim_struct_sites)
 
     mpvis = MPGGAVaspInputSet()
 
@@ -195,7 +201,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         vac_str_sites = set(sc.sites)
         vac_sites = blk_str_sites - vac_str_sites
         vac_site = list(vac_sites)[0]
-        site_mult = vac.get_defectsite_multiplicity(i-1)
+        site_mult = int(vac.get_defectsite_multiplicity(i-1)/conv_prim_rat)
         vac_site_specie = vac_site.specie
         vac_specie = vac_site.specie.symbol
 

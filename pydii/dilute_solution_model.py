@@ -1232,24 +1232,25 @@ def solute_site_preference_finder(
             conc[i][j] = y1
 
     # Compute solute site preference
-    site_pref_data = {}
+    # Removing the functionality
+    #site_pref_data = {}
     """Because all the plots have identical x-points storing it in a
     single array"""
-    site_pref_data['x'] = [dat[0][0] for dat in res1]         # x-axis data
+    #site_pref_data['x'] = [dat[0][0] for dat in res1]         # x-axis data
     # Element whose composition is varied. For x-label
-    site_pref_data['x_label'] = els[0]+ "_mole_fraction"
-    site_pref_data['y_label'] = "$"+solute_specie+"_{"+els[0]+"}/("+\
-        solute_specie+"_{"+els[0]+"}+"+solute_specie+"_{"+els[1]+"})$"
+    #site_pref_data['x_label'] = els[0]+ "_mole_fraction"
+    #site_pref_data['y_label'] = "$"+solute_specie+"_{"+els[0]+"}/("+\
+    #    solute_specie+"_{"+els[0]+"}+"+solute_specie+"_{"+els[1]+"})$"
 
-    y_data = []
-    inds = specie_site_index_map[m-1]
-    data1 = np.sum([conc[ind][0] for ind in range(*inds)],axis=0)
-    data2 = np.sum([conc[ind][1] for ind in range(*inds)],axis=0)
-    frac_data = data1/(data1+data2)
-    frac_data = frac_data.tolist()
-    y_data.append({'data':frac_data})
+    #y_data = []
+    #inds = specie_site_index_map[m-1]
+    #data1 = np.sum([multiplicity[0]*conc[ind][0] for ind in range(*inds)],axis=0)
+    #data2 = np.sum([multiplicity[1]*conc[ind][1] for ind in range(*inds)],axis=0)
+    #frac_data = data1/(data1+data2)
+    #frac_data = frac_data.tolist()
+    #y_data.append({'data':frac_data})
 
-    site_pref_data['y'] = y_data
+    #site_pref_data['y'] = y_data
 
     #  Return all defect concentrations
     conc_data = {}
@@ -1298,11 +1299,9 @@ def solute_site_preference_finder(
             data = data.tolist()
             y_data.append({'data':data,'name':label})
 
-
     conc_data['y'] = y_data
-
-
-    return site_pref_data, conc_data
+    #return site_pref_data, conc_data
+    return  conc_data
 
 @requires(sympy_found,
           "solute_defect_density requires Sympy module. Please install it.")
@@ -1344,19 +1343,20 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
         The plot data is generated and returned in asked format.
     """
 
-    solute_site_pref_data, def_conc_data = solute_site_preference_finder(
+    #solute_site_pref_data, def_conc_data = solute_site_preference_finder(
+    def_conc_data = solute_site_preference_finder(
         structure, e0, T, vac_defs, antisite_defs, solute_defs,
         solute_concen=solute_concen, trial_chem_pot=trial_chem_pot)
 
-    if plot_style == 'highcharts':
+    if plot_style == 'highcharts': 
         "Energy data is ignored in this mode"
         hgh_chrt_data = {}
-        hgh_chrt_data['xAxis'] = conc_data['x_label']
-        hgh_chrt_data['yAxis'] = conc_data['y_label']
+        hgh_chrt_data['xAxis'] = def_conc_data['x_label']
+        hgh_chrt_data['yAxis'] = def_conc_data['y_label']
 
         series = []
-        x = solute_site_pref_data['x']
-        for y_data in solute_site_pref_data['y']:
+        x = def_conc_data['x']
+        for y_data in def_conc_data['y']:
             y = y_data['data']
             xy = zip(x,y)
             xy = [list(el) for el in xy]
@@ -1387,7 +1387,8 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
                 data = [float(x) for x in data]
                 rows.append('\t'.join(list(map(str,data))))
             return rows
-        solute_site_pref_rows = data_to_rows(solute_site_pref_data, True)
+        #solute_site_pref_rows = data_to_rows(solute_site_pref_data, True)
         pt_def_conc_rows = data_to_rows(def_conc_data, False)
-        return solute_site_pref_rows, pt_def_conc_rows
+        #return solute_site_pref_rows, pt_def_conc_rows
+        return pt_def_conc_rows
 

@@ -35,7 +35,7 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
         with MPRester() as mp:
             structure = mp.get_structure_by_material_id(mpid)      
     else:
-        with MPRester(ampi_key) as mp:
+        with MPRester(mapi_key) as mp:
             structure = mp.get_structure_by_material_id(mpid)      
 
     energy_dict = {}
@@ -88,6 +88,7 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
         for solute in solutes:
             solute_flip_energy = solute['energy']-bulk_energy
             solute['energy'] = solute_flip_energy
+        solutes.sort(key=lambda entry: entry['site_index'])
         energy_dict[mpid] = {'solutes':solutes}
         return energy_dict
 
@@ -103,7 +104,7 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None):
         with MPRester() as mp:
             structure = mp.get_structure_by_material_id(mpid)      
     else:
-        with MPRester(ampi_key) as mp:
+        with MPRester(mapi_key) as mp:
             structure = mp.get_structure_by_material_id(mpid)      
 
     energy_dict = {}
@@ -163,9 +164,11 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None):
         for vac in vacancies:
             vac_flip_energy = vac['energy']-bulk_energy
             vac['energy'] = vac_flip_energy
+        vacancies.sort(key=lambda entry: entry['site_index'])
         for antisite in antisites:
             as_flip_energy = antisite['energy']-bulk_energy
             antisite['energy'] = as_flip_energy
+        antisites.sort(key=lambda entry: entry['site_index'])
         energy_dict[unicode(mpid)] = {u"structure":structure,
                 'e0':e0,'vacancies':vacancies,'antisites':antisites}
         return energy_dict
