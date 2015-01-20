@@ -30,9 +30,11 @@ Within the pydii folder, the essential functionality is implemented in
 dilute_solution_model.py. Scripts to generate input files for VASP calculations,
 parsing vasp runs, and generate defect concentrations are in the scripts subfolder.
 The scripts 
+
 #.  generate VASP input files for defect supercell calculations,
 #.  parse the output files from VASP calculations, and
 #.  generate defect concentration, defect formation energy and chemical potential data.
+
 To test the programs fully, VASP is required. If VASP installation is not found, 
 POTCAR file is not generated in step 1 and step 2 can not be performed. In case, 
 the user uses alternative density functional packages for first principles 
@@ -66,7 +68,9 @@ Installation
 
 Materials Project API key
 -------------------------
-
+PyDII makes use of Materials Project (MP) database to get the crystal structure of 
+the intermetallic. To access the MP database, MP API key is required. Please refer 
+to https://materialsproject.org/open to obtain MP API key). 
 
 
 Examples
