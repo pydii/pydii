@@ -42,11 +42,11 @@ any addition details.
 
 Installation
 ------------
-#.  Navigate to pydii root directory::
+#. Navigate to pydii root directory ::
 
     cd pydii
 
-#.  Install the code, using the command::
+#. Install the code, using the command ::
 
     python setup.py install
 
@@ -54,7 +54,7 @@ Installation
     and install them automatically. Access to root may be needed if 
     ``virtualenv`` is not used.
 
-#. The package can be installed at non-standard locations using the command::
+#. The package can be installed at non-standard locations using the command ::
 
     python setup.py install --prefix PYDII_ROOTDIR
 
