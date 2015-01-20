@@ -32,12 +32,10 @@ parsing vasp runs, and generate defect concentrations are in the scripts subfold
 Installation
 ------------
 #. Navigate to pydii root directory::
-
     cd pydii
-
 #. Install the code, using the command::
-
     python setup.py install
+
 The command tries to obtain the required packages and their dependencies and install them automatically.
 Access to root may be needed if ``virtualenv`` is not used.
 
