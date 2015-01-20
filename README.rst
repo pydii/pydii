@@ -50,16 +50,16 @@ Installation
 
     python setup.py install
 
-    The command tries to obtain the required packages and their dependencies 
-    and install them automatically. Access to root may be needed if 
-    ``virtualenv`` is not used.
+   The command tries to obtain the required packages and their dependencies 
+   and install them automatically. Access to root may be needed if 
+   ``virtualenv`` is not used.
 
 #. The package can be installed at non-standard locations using the command ::
 
     python setup.py install --prefix PYDII_ROOTDIR
 
-    where PYDII_ROOTDIR is your choice of directory. In UNIX/Linux environments, 
-    add PYDII_ROOTDIR to PATH and PYTHONPATH variables by the following commands::
+   where PYDII_ROOTDIR is your choice of directory. In UNIX/Linux environments, 
+   add PYDII_ROOTDIR to PATH and PYTHONPATH variables by the following commands ::
     
     export PATH=$PATH:PYDII_ROOTDIR
     export PYTHONPATH=$PYTHONPATH:PYDII_ROOTDIR    
