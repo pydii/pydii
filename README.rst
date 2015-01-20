@@ -38,7 +38,6 @@ Installation
 #. Install the code, using the command::
 
     python setup.py install
-
 The command tries to obtain the required packages and their dependencies and install them automatically.
 Access to root may be needed if ``virtualenv`` is not used.
 
