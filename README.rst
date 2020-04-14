@@ -1,8 +1,8 @@
 =====
-pydii
+PyDII
 =====
 
-Equilibrium defect concentrations and solute site preference in intermetallic compounds
+Equilibrium defect concentrations and solute site preference in intermetallic compounds.
 
 Requirements
 ------------
