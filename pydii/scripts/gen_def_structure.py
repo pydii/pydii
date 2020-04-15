@@ -14,13 +14,13 @@ import sys
 from argparse import ArgumentParser 
 import json
 
-from pymatgen.io.vaspio_set import MPGGAVaspInputSet
-from pymatgen.matproj.rest import MPRester
+from pymatgen.io.vasp.sets import MVLRelax52Set
+from pymatgen.ext.matproj import MPRester
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.structure import Structure
-from pymatgen.serializers.json_coders import pmg_load, pmg_dump
-from pymatgen.analysis.defects.point_defects import Vacancy
-from pymatgen.io.vaspio.vasp_input import Poscar, Kpoints
+#from pymatgen.core.structure import Structure
+#from pymatgen.util.serialization import pmg_pickle_load, pmg_pickle_dump
+from pymatgen.analysis.defects.core import Vacancy
+from pymatgen.io.vasp.inputs import Poscar, Kpoints
 
 
 def get_sc_scale(inp_struct, final_site_no):
@@ -48,9 +48,9 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
     conv_struct_sites = len(struct.sites)
     conv_prim_rat = int(conv_struct_sites/prim_struct_sites)
-    sc_scale = get_sc_scale(struct,cellmax)
+    sc_scale = get_sc_scale(inp_struct=struct, final_site_no=cellmax)
 
-    mpvis = MPGGAVaspInputSet()
+    mpvis = MVLRelax52Set(struct)
 
     # Begin defaults: All default settings.
     blk_vasp_incar_param = {'IBRION':-1,'EDIFF':1e-4,'EDIFFG':0.001,'NSW':0,}
@@ -70,7 +70,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         ptcr_flag = False
 
 
-    vac = Vacancy(struct, {}, {})
+    vac = Vacancy(struct, {})
     scs = vac.make_supercells_with_defects(sc_scale)
     site_no = scs[0].num_sites
     if site_no > cellmax:
@@ -164,19 +164,22 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     conv_struct_sites = len(struct.sites)
     conv_prim_rat = int(conv_struct_sites/prim_struct_sites)
 
-    mpvis = MPGGAVaspInputSet()
-
-    # Begin defaults: All default settings.
-    blk_vasp_incar_param = {'IBRION':-1,'EDIFF':1e-4,'EDIFFG':0.001,'NSW':0,}
-    def_vasp_incar_param = {'ISIF':2,'NELM':99,'IBRION':2,'EDIFF':1e-6, 
-                            'EDIFFG':0.001,'NSW':40,}
+    # BEGIN DEFAULT SETTINGS
+    #blk_vasp_incar_param = {'IBRION':-1, 'EDIFF':1e-4, 'EDIFFG':0.001, 'NSW':0,}
+    def_vasp_incar_param = {'ISIF':2, 'NELM':99, 'IBRION':2, 'EDIFF':1e-6, 
+                            'EDIFFG':0.001, 'NSW':40,}
     kpoint_den = 6000
-    # End defaults
+    # END DEFAULT SETTINGS
+
+    mpvis = MVLRelax52Set(struct, user_incar_settings=def_vasp_incar_param,
+                          user_kpoints_settings=Kpoints.automatic_density(struct, kppa=kpoint_den))
+    print('We are OK!')
+    sys.exit(1)
     
     # Check if POTCAR file can be geneated
     ptcr_flag = True
     try:
-        potcar = mpvis.get_potcar(struct)
+        potcar = mpvis.potcar
     except:
         print ("VASP POTCAR folder not detected.\n" \
               "Only INCAR, POSCAR, KPOINTS are generated.\n" \
@@ -184,15 +187,15 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
               "refer to pymatgen documentation for configuring the settings.")
         ptcr_flag = False
 
-    vac = Vacancy(struct, {}, {})
-    sc_scale = get_sc_scale(struct,cellmax)
-    scs = vac.make_supercells_with_defects(sc_scale)
+    vac = Vacancy(struct, {})
+    sc_scale = get_sc_scale(inp_struct=struct, final_site_no=cellmax)
+    scs = vac.generate_defect_structure(supercell=sc_scale)
     site_no = scs[0].num_sites
     if site_no > cellmax:
-            max_sc_dim = max(sc_scale)
-            i = sc_scale.index(max_sc_dim)
-            sc_scale[i] -= 1
-            scs = vac.make_supercells_with_defects(sc_scale)
+        max_sc_dim = max(sc_scale)
+        i = sc_scale.index(max_sc_dim)
+        sc_scale[i] -= 1
+        scs = vac.generate_defect_structure(supercell=sc_scale)
 
     interdir = mpid
     blk_str_sites = set(scs[0].sites)
@@ -210,16 +213,20 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         solute_struct = sc.copy()
         solute_struct.append(solute, vac_site.frac_coords)
 
-        incar = mpvis.get_incar(solute_struct)
+        '''
+        incar = mpvis.incar
         incar.update(def_vasp_incar_param)
-        poscar = mpvis.get_poscar(solute_struct)
-        kpoints = Kpoints.automatic_density(solute_struct,kpoint_den)
+        poscar = mpvis.poscar
+        kpoints = Kpoints.automatic_density(solute_struct, kpoint_den)
         if ptcr_flag:
-            potcar = mpvis.get_potcar(solute_struct)
+            potcar = mpvis.potcar
+        '''
 
         sub_def_dir ='solute_{}_mult-{}_sitespecie-{}_subspecie-{}'.format(
                 str(i), site_mult, vac_specie, solute)
-        fin_dir = os.path.join(interdir,sub_def_dir)
+        fin_dir = os.path.join(interdir, sub_def_dir)
+        mpvis.write_input(fin_dir)
+        '''
         try:
             os.makedirs(fin_dir)
         except:
@@ -229,6 +236,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         kpoints.write_file(os.path.join(fin_dir,'KPOINTS'))
         if ptcr_flag:
             potcar.write_file(os.path.join(fin_dir,'POTCAR'))
+        '''
 
 def im_vac_antisite_def_struct_gen():
     m_description = 'Command to generate vacancy and antisite defect ' \

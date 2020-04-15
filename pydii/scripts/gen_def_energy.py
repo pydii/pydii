@@ -81,7 +81,7 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
                 })
     else:
         if not solutes:
-            print "Solute folders do not exist"
+            print("Solute folders do not exist")
             return {}
 
         print ("Solute {} calculations successful for {}".format(solute,mpid))
@@ -159,7 +159,7 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None):
                 'site_multiplicity':site_multiplicity
                 })
     else:
-        print "All calculations successful for ", mpid
+        print("All calculations successful for {}".format(mpid))
         e0 = bulk_energy/bulk_sites*structure.num_sites
         for vac in vacancies:
             vac_flip_energy = vac['energy']-bulk_energy

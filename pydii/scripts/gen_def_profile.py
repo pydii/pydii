@@ -40,11 +40,11 @@ def get_def_profile(mpid, T,  file):
     antisites.sort(key=lambda entry: entry['site_index'])
     for vac_def in vacs:
         if not vac_def:
-            print 'All vacancy defect energies not present'
+            print('All vacancy defect energies not present')
             continue
     for antisite_def in antisites:
         if not antisite_def:
-            print 'All antisite defect energies not preset'
+            print('All antisite defect energies not present')
             continue
 
     try:
@@ -68,15 +68,15 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
     solutes = sol_raw_energy_dict[mpid]['solutes']
     for vac_def in vacs:
         if not vac_def:
-            print 'All vacancy defect energies not present'
+            print('All vacancy defect energies not present')
             continue
     for antisite_def in antisites:
         if not antisite_def:
-            print 'All antisite defect energies not preset'
+            print('All antisite defect energies not present')
             continue
     for solute_def in solutes:
         if not solute_def:
-            print 'All solute defect energies not preset'
+            print('All solute defect energies not present')
             continue
 
     try:
@@ -129,15 +129,15 @@ def im_vac_antisite_def_profile():
         fl_nm = args.mpid+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
             for row in conc_dat:
-                print >> fp, row
+                print(row, file=fp)
         fl_nm = args.mpid+'_def_energy.dat'
         with open(fl_nm,'w') as fp:
             for row in en_dat:
-                print >> fp, row
+                print(row, file=fp)
         fl_nm = args.mpid+'_chem_pot.dat'
         with open(fl_nm,'w') as fp:
             for row in mu_dat:
-                print >> fp, row
+                print(row, file=fp)
 
 
 def im_sol_sub_def_profile():
@@ -192,7 +192,7 @@ def im_sol_sub_def_profile():
         fl_nm = args.mpid+'_solute-'+args.solute+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
             for row in pt_def_conc:
-                print >> fp, row
+                print(row, file=fp)
 
 
 if __name__ == '__main__':
