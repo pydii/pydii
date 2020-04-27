@@ -2,7 +2,7 @@
 """
 This file computes the raw defect energies (for vacancy and antisite defects) 
 by parsing the vasprun.xml files in the VASP DFT calculations
-for binary intermetallics, where the meta data is in the folder name 
+for binary intermetallics, where the metadata is in the folder name 
 """
 
 #from __future__ import unicode_literals
@@ -16,11 +16,11 @@ import sys
 import glob
 from argparse import ArgumentParser
 
-from pymatgen.matproj.rest import MPRester
+from pymatgen.ext.matproj import MPRester
 from monty.serialization import dumpfn
 from monty.json import MontyEncoder
-from pymatgen.serializers.json_coders import pmg_dump
-from pymatgen.io.vaspio.vasp_output import Vasprun
+#from pymatgen.serializers.json_coders import pmg_dump
+from pymatgen.io.vasp.outputs import Vasprun
 
 
 def solute_def_parse_energy(mpid, solute, mapi_key=None):
@@ -42,11 +42,11 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
 
     solutes = []
     def_folders = glob.glob(os.path.join(
-        mpid,"solute*subspecie-{}".format(solute)))
-    def_folders += glob.glob(os.path.join(mpid,"bulk"))
+        mpid, "solute*subspecie-{}".format(solute)))
+    def_folders += glob.glob(os.path.join(mpid, "bulk"))
     for defdir in def_folders:
         fldr_name = os.path.split(defdir)[1]
-        vr_file = os.path.join(defdir,'vasprun.xml') 
+        vr_file = os.path.join(defdir, 'vasprun.xml') 
         if not os.path.exists(vr_file):
             print (fldr_name, ": vasprun.xml doesn't exist in the folder. " \
                    "Abandoning parsing of energies for {}".format(mpid))
@@ -56,8 +56,8 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
             vr = Vasprun(vr_file)
         except:
             print (fldr_name, ":Failure, couldn't parse vaprun.xml file. "
-                   "Abandoning parsing of energies for {}".format(mpid))
-            break
+                   "Abandoning parsing of energies for {}.".format(mpid))
+            break       # Further processing for the mpid is not useful
 
         if not vr.converged:
             print (fldr_name, ": Vasp calculation not converged. "
@@ -81,10 +81,10 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None):
                 })
     else:
         if not solutes:
-            print("Solute folders do not exist")
+            print("Solute folders do not exist.")
             return {}
 
-        print ("Solute {} calculations successful for {}".format(solute,mpid))
+        print ("Solute {} calculations successful for {}.".format(solute,mpid))
         for solute in solutes:
             solute_flip_energy = solute['energy']-bulk_energy
             solute['energy'] = solute_flip_energy
@@ -216,7 +216,9 @@ def im_sol_sub_def_energy_parse():
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
-    parser.add_argument("--solute", help="Solute Element")
+    parser.add_argument("--solute", 
+            type=str,
+            help="Solute Element")
 
     parser.add_argument("--mapi_key",
             default = None,
@@ -229,8 +231,8 @@ def im_sol_sub_def_energy_parse():
     energy_dict = solute_def_parse_energy(args.mpid, args.solute, 
             args.mapi_key)
     if energy_dict:
-        fl_nm = args.mpid+'_solute-'+args.solute+'_raw_defect_energy.json'
-        dumpfn(energy_dict, fl_nm, indent=2, cls=MontyEncoder)
+        fl_nm = args.mpid + '_solute-' + args.solute + '_raw_defect_energy.json'
+        dumpfn(energy_dict, fl_nm, indent=4, cls=MontyEncoder)
 
 
 if __name__ == '__main__':
