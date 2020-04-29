@@ -1,28 +1,17 @@
 #!/usr/bin/env python
 """
-PyDIM file for generating defect concentrations
+PyDII file for generating defect concentrations
 """
-
-from __future__ import division
-
-#__author__ == 'Bharat Medasani'
-#__version__ = "0.1"
-#__maintainer__ = "Bharat Medasani"
-#__email__ = "mbkumar@gmail.com"
-#__status__ = "Beta"
-#__date__ = "9/16/14"
-
 import json
 import os
 from argparse import ArgumentParser
 
 from monty.serialization import loadfn
 from monty.json import MontyDecoder
-from pydii.dilute_solution_model import \
-        compute_defect_density, solute_defect_density
+from pydii.dilute_solution_model import compute_defect_density, solute_defect_density
+
 
 def get_def_profile(mpid, T,  file):
-
     raw_energy_dict = loadfn(file, cls=MontyDecoder)
 
     e0 = raw_energy_dict[mpid]['e0']
@@ -33,19 +22,20 @@ def get_def_profile(mpid, T,  file):
     antisites.sort(key=lambda entry: entry['site_index'])
     for vac_def in vacs:
         if not vac_def:
-            print('All vacancy defect energies not present')
+            print('All vacancy defect energies not present.')
             continue
     for antisite_def in antisites:
         if not antisite_def:
-            print('All antisite defect energies not present')
+            print('All antisite defect energies not present.')
             continue
 
     try:
-        def_conc, def_en, mu = compute_defect_density(struct, e0, vacs, antisites, T,
-                plot_style='gnuplot')
+        def_conc, def_en, mu = compute_defect_density(struct, e0, vacs, 
+                antisites, T, plot_style='gnuplot')
         return def_conc, def_en, mu
     except:
         raise
+
 
 def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, 
         trial_chem_pot):
@@ -78,6 +68,7 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
         return  def_conc
     except:
         raise
+
 
 def im_vac_antisite_def_profile():
     m_description = 'Command to generate vacancy and antisite defect ' \

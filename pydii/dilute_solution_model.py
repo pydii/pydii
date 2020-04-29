@@ -11,7 +11,6 @@ Reference: Phys Rev B, 63, 094103, 2001,
 C. Woodward, M. Asta, G. Kresse and J. Hafner.
 """
 
-
 __author__ = 'Bharat Medasani'
 __version__ = "0.2"
 __maintainer__ = "Bharat Medasani"
@@ -27,7 +26,6 @@ from six.moves import zip
 from monty.dev import requires
 from monty.fractions import gcd
 
-
 try:
     from sympy import Symbol, nsolve, Integer, Float, Matrix, exp, solve, Eq
     sympy_found = True
@@ -35,7 +33,7 @@ except ImportError:
     sympy_found = False
 
 # physical consts
-k_B=8.6173324e-5                # eV/K
+k_B = 8.6173324e-5  # eV/K
 
 # Check the inputs
 def check_input(def_list):
@@ -50,7 +48,6 @@ def check_input(def_list):
             "dilute_solution_model requires Sympy module. Please install it.")
 def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T,
         trial_chem_pot = None, generate='plot'):
-
     """
     Compute the defect densities using dilute solution model.
 
@@ -111,7 +108,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T,
 
     #c0 = np.diag(multiplicity)
     c0 = np.diag(np.ones(n))
-    mu = [Symbol('mu'+i.__str__()) for i in range(m)]
+    mu = [Symbol('mu' + i.__str__()) for i in range(m)]
 
     # Generate maps for hashing
     # Generate specie->mu map and use it for site->mu map
@@ -1300,23 +1297,22 @@ def solute_site_preference_finder(
             y_data.append({'data':data,'name':label})
 
     conc_data['y'] = y_data
-    #return site_pref_data, conc_data
     return  conc_data
 
 @requires(sympy_found,
           "solute_defect_density requires Sympy module. Please install it.")
 def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
         solute_concen=0.01, T=800, trial_chem_pot = None, 
-        plot_style="highchargs"):
+        plot_style="highcharts"):
     """
     Wrapper for the solute_site_preference_finder.
     The computed plot data is prepared based on plot_style.
 
     Args:
         structure: pymatgen.core.structure.Structure object representing the
-            primitive or unitcell of the crystal.
+            primitive or unit cell of the crystal.
         e0: The total energy of the undefected system.
-            This is E0 from VASP calculation.
+            This is E0 from the VASP calculation.
         vac_defs: List of vacancy defect parameters in the dictionary format.
             The keys of the dict associated with each vacancy defect are
             1) site_index, 2) site_specie, 3) site_multiplicity, and
@@ -1333,7 +1329,7 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
             specified in substitution_specie
         solute_concen: Solute concentration (in fractional value)
         T: Temperature in Kelvin
-        trial_chem_pot (optional): Trial chemical potentials to speedup
+        trial_chem_pot (optional): Trial chemical potentials to speed up
             the plot generation. Format is {el1:mu1,...}
         plot_style (string): Allowed options are 
             1) highcharts (default)
@@ -1343,7 +1339,6 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
         The plot data is generated and returned in asked format.
     """
 
-    #solute_site_pref_data, def_conc_data = solute_site_preference_finder(
     def_conc_data = solute_site_preference_finder(
         structure, e0, T, vac_defs, antisite_defs, solute_defs,
         solute_concen=solute_concen, trial_chem_pot=trial_chem_pot)
@@ -1364,7 +1359,7 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
             flds= name.split('_')
             def_string = flds[0]
             site_string = flds[1].strip('{}')
-            name = def_string+"<sub>"+site_string+"</sub>"
+            name = def_string + "<sub>" + site_string + "</sub>"
             #series.append({'data':xy, 'name':y_data['name']})
             series.append({'data':xy, 'name':name})
         hgh_chrt_data['series'] = series
@@ -1378,7 +1373,7 @@ def solute_defect_density(structure, e0, vac_defs, antisite_defs, solute_defs,
                 labels.append(inp_data['y_label'])
             else:
                 labels += [y['name'] for y in inp_data['y']]
-            rows.append('#'+'\t'.join(labels))
+            rows.append('#' + '\t'.join(labels))
             m = len(inp_data['x'])
             for i in range(m):
                 data = []

@@ -5,11 +5,8 @@ by parsing the vasprun.xml files in the VASP DFT calculations
 for binary intermetallics, where the metadata is in the folder name 
 """
 
-#from __future__ import unicode_literals
-from __future__ import division
-
-__author__ = "Bharat Medasani"
-__data__  = "Sep 14, 2014"
+__author__ = "Bharat Medasani, Enze Chen"
+__data__  = "Apr 28, 2020"
 
 import os
 import sys
@@ -19,7 +16,6 @@ from argparse import ArgumentParser
 from pymatgen.ext.matproj import MPRester
 from monty.serialization import dumpfn
 from monty.json import MontyEncoder
-#from pymatgen.serializers.json_coders import pmg_dump
 from pymatgen.io.vasp.outputs import Vasprun
 
 
@@ -111,12 +107,12 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None):
 
     antisites = []
     vacancies = []
-    def_folders = glob.glob(os.path.join(mpid,"vacancy*"))
-    def_folders += glob.glob(os.path.join(mpid,"antisite*"))
-    def_folders += glob.glob(os.path.join(mpid,"bulk"))
+    def_folders = glob.glob(os.path.join(mpid, "vacancy*"))
+    def_folders += glob.glob(os.path.join(mpid, "antisite*"))
+    def_folders += glob.glob(os.path.join(mpid, "bulk"))
     for defdir in def_folders:
         fldr_name = os.path.split(defdir)[1]
-        vr_file = os.path.join(defdir,'vasprun.xml') 
+        vr_file = os.path.join(defdir, 'vasprun.xml') 
         if not os.path.exists(vr_file):
             print (fldr_name, ": vasprun.xml doesn't exist in the folder. " \
                    "Abandoning parsing of energies for {}".format(mpid))
@@ -154,23 +150,23 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None):
             substitution_specie = fldr_fields[4].split("-")[1]
             energy = vr.final_energy
             antisites.append({'site_index':site_index,
-                'site_specie':site_specie,'energy':energy,
+                'site_specie':site_specie, 'energy':energy,
                 'substitution_specie':substitution_specie,
                 'site_multiplicity':site_multiplicity
                 })
     else:
         print("All calculations successful for {}".format(mpid))
-        e0 = bulk_energy/bulk_sites*structure.num_sites
+        e0 = bulk_energy / bulk_sites * structure.num_sites
         for vac in vacancies:
-            vac_flip_energy = vac['energy']-bulk_energy
+            vac_flip_energy = vac['energy'] - bulk_energy
             vac['energy'] = vac_flip_energy
-        vacancies.sort(key=lambda entry: entry['site_index'])
+        vacancies.sort(key=lambda entry:entry['site_index'])
         for antisite in antisites:
-            as_flip_energy = antisite['energy']-bulk_energy
+            as_flip_energy = antisite['energy'] - bulk_energy
             antisite['energy'] = as_flip_energy
-        antisites.sort(key=lambda entry: entry['site_index'])
-        energy_dict[unicode(mpid)] = {u"structure":structure,
-                'e0':e0,'vacancies':vacancies,'antisites':antisites}
+        antisites.sort(key=lambda entry:entry['site_index'])
+        energy_dict[mpid] = {'structure':structure,
+            'e0':e0, 'vacancies':vacancies, 'antisites':antisites}
         return energy_dict
 
     return {} # Return Null dict due to failure
@@ -199,8 +195,8 @@ def im_vac_antisite_def_energy_parse():
 
     energy_dict = vac_antisite_def_parse_energy(args.mpid, args.mapi_key)
     if energy_dict:
-        fl_nm = args.mpid+'_raw_defect_energy.json'
-        dumpfn(energy_dict, fl_nm, cls=MontyEncoder, indent=2)
+        fl_nm = args.mpid + '_raw_defect_energy.json'
+        dumpfn(energy_dict, fl_nm, cls=MontyEncoder, indent=4)
 
 
 def im_sol_sub_def_energy_parse():

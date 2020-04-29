@@ -12,18 +12,16 @@ def readme():
 setup(
         name="pydii",
         packages=find_packages(),
-        version="1.0.0",
+        version="1.1.0",
         install_requires=["pymatgen>=2020.1", "sympy>=1.0", "numpy>=1.13"],
         author="Bharat Medasani",
         author_email="mbkumar@gmail.com",
         url="http://github.com/mbkumar/pydii",
         description="PyDII is a python tool to evaluate point defect " 
                   "concentrations and micro-alloy solute site preference "
-                  "in intermetallics",
+                  "in intermetallics.",
         long_description=readme(),
         classifiers=[
-            "Programming Language :: Python :: 2",
-            "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3.4",
             "Development Status :: 1 - Beta",
             "Intended Audience :: Science/Research",
