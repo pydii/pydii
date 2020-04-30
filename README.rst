@@ -16,7 +16,7 @@ If not available already, use the following steps.
 
 #. Install `git <http://git-scm.com>`_ if it's not already packaged with your system.
 
-#. Download th PyDII source code using the command::
+#. Download the PyDII source code using the command::
 
     git clone https://github.com/pydii/pydii.git
     
@@ -39,12 +39,12 @@ To test the programs fully, VASP is required. If a VASP installation is not foun
 a POTCAR file is not generated in step 1 and step 2 cannot be performed. In case 
 the user uses alternative density functional theory packages for first-principles 
 calculations, the input to step 3 should be prepared in the JSON format given 
-in ``examples/NiAl_mp-1487/mp-1487_raw_defect_energy.json``. Contact the authors for 
-any addition details.
+in ``examples/NiAl_mp-1487/mp-1487_raw_defect_energy.json``. Contact the authors 
+for any additional details.
 
 Installation
 ------------
-#. Navigate to pydii root directory ::
+#. Navigate to the PyDII root directory ::
 
     cd pydii
 
@@ -54,7 +54,9 @@ Installation
 
    The command tries to obtain the required packages and their dependencies 
    and install them automatically. Access to root may be needed if 
-   ``virtualenv`` or the ``--user`` flag are not used.
+   ``virtualenv`` is not used. Alternatively you can try ::
+
+   pip install . --user
 
 #. The package can be installed at non-standard locations using the command ::
 
@@ -71,7 +73,7 @@ Materials Project API key
 -------------------------
 PyDII makes use of the Materials Project (MP) database to get the crystal structure of 
 the intermetallic. To access the MP database, a MP API key is required. Please refer 
-to https://materialsproject.org/open to obtain your MP API key). 
+to https://materialsproject.org/open to obtain your MP API key. 
 
 
 Examples

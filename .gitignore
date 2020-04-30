@@ -3,4 +3,4 @@
 dist
 build
 /*.egg-info
-**/mp-1487*
+**/mp-*

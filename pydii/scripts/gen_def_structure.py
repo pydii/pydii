@@ -8,9 +8,7 @@ __author__ = "Bharat Medasani, Enze Chen"
 __data__  = "Apr 28, 2020"
 
 import os
-import sys
 from argparse import ArgumentParser 
-import json
 
 from pymatgen.io.vasp.sets import MPMetalRelaxSet
 from pymatgen.ext.matproj import MPRester
@@ -112,7 +110,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
             mpvis = MPMetalRelaxSet(anti_sc, user_incar_settings=def_vasp_incar_param,
                         user_kpoints_settings=custom_kpoints)
             anti_dir = 'antisite_{}_mult-{}_sitespecie-{}_subspecie-{}'.format(
-                    str(i+1), site_mult, vac_symbol, specie_symbol)
+                        str(i+1), site_mult, vac_symbol, specie_symbol)
             fin_dir = os.path.join(mpid, anti_dir)
             mpvis.write_input(fin_dir)
 
@@ -258,5 +256,5 @@ def im_sol_sub_def_struct_gen():
 
 
 if __name__ == '__main__':
-    #im_vac_antisite_def_struct_gen()
-    im_sol_sub_def_struct_gen()
+    im_vac_antisite_def_struct_gen()
+    #im_sol_sub_def_struct_gen()

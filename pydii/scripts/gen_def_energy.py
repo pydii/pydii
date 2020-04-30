@@ -9,7 +9,6 @@ __author__ = "Bharat Medasani, Enze Chen"
 __data__  = "Apr 28, 2020"
 
 import os
-import sys
 import glob
 from argparse import ArgumentParser
 

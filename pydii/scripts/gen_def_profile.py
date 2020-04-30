@@ -2,7 +2,9 @@
 """
 PyDII file for generating defect concentrations
 """
-import json
+__author__ = "Bharat Medasani, Enze Chen"
+__data__ = "Apr 28, 2020"
+
 import os
 from argparse import ArgumentParser
 
