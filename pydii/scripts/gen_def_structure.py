@@ -15,6 +15,7 @@ from pymatgen.ext.matproj import MPRester
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.sites import Site
+from pymatgen.core.structure import Structure
 from pymatgen.analysis.defects.core import Vacancy
 from pymatgen.io.vasp.inputs import Kpoints
 
@@ -33,17 +34,19 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         print ("============\nERROR: Provide an mpid\n============")
         return
 
-    # Get conventional and primitive structures from the Materials Project DB
+    # Get primitive structure from the Materials Project DB
     if not mapi_key:
         with MPRester() as mp:
             struct = mp.get_structure_by_material_id(mpid)
     else:
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
-    prim_struct_sites = len(struct.sites)
-    struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
-    conv_struct_sites = len(struct.sites)
-    conv_prim_ratio = int(conv_struct_sites / prim_struct_sites)
+    sga = SpacegroupAnalyzer(struct)
+    prim_struct = sga.find_primitive()
+    #prim_struct_sites = len(prim_struct.sites)
+    #conv_struct = sga.get_conventional_standard_structure()
+    #conv_struct_sites = len(conv_struct.sites)
+    #conv_prim_ratio = int(conv_struct_sites / prim_struct_sites)
 
     # Default VASP settings
     blk_vasp_incar_param = {'IBRION':-1, 'EDIFF':1e-5, 'EDIFFG':0.001, 'NSW':0,}
@@ -51,8 +54,8 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     kpoint_den = 6000
     
     # Create bulk structure and associated VASP files
-    sc_scale = get_sc_scale(inp_struct=struct, final_site_no=cellmax)
-    blk_sc = struct.copy()
+    sc_scale = get_sc_scale(inp_struct=prim_struct, final_site_no=cellmax)
+    blk_sc = prim_struct.copy()
     blk_sc.make_supercell(scaling_matrix=sc_scale)
     site_no = blk_sc.num_sites
 
@@ -61,7 +64,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         max_sc_dim = max(sc_scale)
         i = sc_scale.index(max_sc_dim)
         sc_scale[i] -= 1
-        blk_sc = struct.copy()
+        blk_sc = prim_struct.copy()
         blk_sc.make_supercell(scaling_matrix=sc_scale)
     blk_str_sites = set(blk_sc.sites)
     custom_kpoints = Kpoints.automatic_density(blk_sc, kppa=kpoint_den)
@@ -80,16 +83,21 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     mpvis.write_input(fin_dir)
 
     # Create each defect structure and associated VASP files
-    for i, site in enumerate(struct.sites):
-        vac = Vacancy(structure=struct, defect_site=site)
+    # First find all unique defect sites
+    periodic_struct = sga.get_symmetrized_structure()
+    unique_sites = list(set([periodic_struct.find_equivalent_sites(site)[0] \
+                             for site in periodic_struct.sites]))
+    temp_struct = Structure.from_sites(sorted(unique_sites))
+    prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
+    for i, site in enumerate(prim_struct2.sites):
+        vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
-        site_no = vac_sc.num_sites
         
         # Get vacancy site information
         vac_str_sites = set(vac_sc.sites)
         vac_sites = blk_str_sites - vac_str_sites
         vac_site = next(iter(vac_sites))
-        site_mult = int(vac.get_multiplicity() / conv_prim_ratio)
+        site_mult = vac.get_multiplicity()
         vac_site_specie = vac_site.specie
         vac_symbol = vac_site_specie.symbol
 
@@ -123,25 +131,27 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         print ("============\nERROR: Provide solute atom\n============")
         return
     
-    # Get conventional and primitive structures from the Materials Project DB
+    # Get primitive structure from the Materials Project DB
     if not mapi_key:
         with MPRester() as mp:
             struct = mp.get_structure_by_material_id(mpid)
     else:
         with MPRester(mapi_key) as mp:
             struct = mp.get_structure_by_material_id(mpid)
-    prim_struct_sites = len(struct.sites)
-    struct = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
-    conv_struct_sites = len(struct.sites)
-    conv_prim_ratio = int(conv_struct_sites / prim_struct_sites)
+    sga = SpacegroupAnalyzer(struct)
+    prim_struct = sga.find_primitive()
+    #prim_struct_sites = len(prim_struct.sites)
+    #conv_struct = sga.get_conventional_standard_structure()
+    #conv_struct_sites = len(conv_struct.sites)
+    #conv_prim_ratio = int(conv_struct_sites / prim_struct_sites)
 
     # Default VASP settings
     def_vasp_incar_param = {'ISIF':2, 'EDIFF':1e-6, 'EDIFFG':0.001,}
     kpoint_den = 6000
     
     # Create each substitutional defect structure and associated VASP files
-    sc_scale = get_sc_scale(inp_struct=struct, final_site_no=cellmax)
-    blk_sc = struct.copy()
+    sc_scale = get_sc_scale(inp_struct=prim_struct, final_site_no=cellmax)
+    blk_sc = prim_struct.copy()
     blk_sc.make_supercell(scaling_matrix=sc_scale)
     site_no = blk_sc.num_sites
 
@@ -150,21 +160,27 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         max_sc_dim = max(sc_scale)
         i = sc_scale.index(max_sc_dim)
         sc_scale[i] -= 1
-        blk_sc = struct.copy()
+        blk_sc = prim_struct.copy()
         blk_sc.make_supercell(scaling_matrix=sc_scale)
 
+    # Create solute structures at vacancy sites
+    # First find all unique defect sites
     blk_str_sites = set(blk_sc.sites)
-    for i, site in enumerate(struct.sites):
-        vac = Vacancy(structure=struct, defect_site=site)
+    periodic_struct = sga.get_symmetrized_structure()
+    unique_sites = list(set([periodic_struct.find_equivalent_sites(site)[0] \
+                             for site in periodic_struct.sites]))
+    temp_struct = Structure.from_sites(sorted(unique_sites))
+    prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
+    for i, site in enumerate(prim_struct2.sites):
+        vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
-        site_no = vac_sc.num_sites
         
         # Get vacancy site information
         vac_str_sites = set(vac_sc.sites)
         vac_sites = blk_str_sites - vac_str_sites
         vac_site = next(iter(vac_sites))
         vac_specie = vac_site.specie.symbol
-        site_mult = int(vac.get_multiplicity() / conv_prim_ratio)
+        site_mult = vac.get_multiplicity()
 
         # Solute substitution defect generation at the vacancy site
         solute_struct = vac_sc.copy()
