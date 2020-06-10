@@ -89,6 +89,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
                              for site in periodic_struct.sites]))
     temp_struct = Structure.from_sites(sorted(unique_sites))
     prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
+    prim_struct2.lattice = prim_struct.lattice  # a little hacky
     for i, site in enumerate(prim_struct2.sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
@@ -171,6 +172,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
                              for site in periodic_struct.sites]))
     temp_struct = Structure.from_sites(sorted(unique_sites))
     prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
+    prim_struct2.lattice = prim_struct.lattice  # a little hacky
     for i, site in enumerate(prim_struct2.sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
@@ -272,5 +274,5 @@ def im_sol_sub_def_struct_gen():
 
 
 if __name__ == '__main__':
-    im_vac_antisite_def_struct_gen()
-    #im_sol_sub_def_struct_gen()
+    #im_vac_antisite_def_struct_gen()
+    im_sol_sub_def_struct_gen()

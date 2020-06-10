@@ -231,6 +231,6 @@ def im_sol_sub_def_energy_parse():
 
 
 if __name__ == '__main__':
-    #im_vac_antisite_def_energy_parse()
-    im_sol_sub_def_energy_parse()
+    im_vac_antisite_def_energy_parse()
+    #im_sol_sub_def_energy_parse()
 
