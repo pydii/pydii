@@ -14,10 +14,10 @@ setup(
         packages=find_packages(),
         version="1.1.0",
         install_requires=["pymatgen>=2020.1", "sympy>=1.0", "numpy>=1.13"],
-        author="Bharat Medasani",
-        author_email="mbkumar@gmail.com",
+        author="Bharat Medasani, Enze Chen",
+        author_email="mbkumar@gmail.com, chenze@berkeley.edu",
         url="http://github.com/mbkumar/pydii",
-        description="PyDII is a python tool to evaluate point defect " 
+        description="PyDII is a python tool to evaluate point defect "
                   "concentrations and micro-alloy solute site preference "
                   "in intermetallics.",
         long_description=readme(),

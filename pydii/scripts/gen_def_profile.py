@@ -3,14 +3,14 @@
 PyDII file for generating defect concentrations
 """
 __author__ = "Bharat Medasani, Enze Chen"
-__data__ = "Apr 28, 2020"
+__date__ = "2020/06/25"
 
 import os
 from argparse import ArgumentParser
 
 from monty.serialization import loadfn
 from monty.json import MontyDecoder
-from pydii.dilute_solution_model import compute_defect_density, solute_defect_density
+from dilute_solution_model import compute_defect_density, solute_defect_density
 
 
 def get_def_profile(mpid, T,  file):
@@ -32,16 +32,14 @@ def get_def_profile(mpid, T,  file):
             continue
 
     try:
-        def_conc, def_en, mu = compute_defect_density(struct, e0, vacs, 
+        def_conc, def_en, mu = compute_defect_density(struct, e0, vacs,
                 antisites, T, plot_style='gnuplot')
         return def_conc, def_en, mu
     except:
         raise
 
 
-def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, 
-        trial_chem_pot):
-
+def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, trial_chem_pot):
     raw_energy_dict = loadfn(def_file, cls=MontyDecoder)
     sol_raw_energy_dict = loadfn(sol_file, cls=MontyDecoder)
 
@@ -64,8 +62,8 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
             continue
 
     try:
-        def_conc = solute_defect_density(struct, e0, vacs, 
-                antisites, solutes, solute_concen=solute_conc, T=T, 
+        def_conc = solute_defect_density(struct, e0, vacs,
+                antisites, solutes, solute_concen=solute_conc, T=T,
                 trial_chem_pot=trial_chem_pot, plot_style="gnuplot")
         return  def_conc
     except:
@@ -74,7 +72,7 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file,
 
 def im_vac_antisite_def_profile():
     m_description = 'Command to generate vacancy and antisite defect ' \
-                    'concentration for intermetallics from the raw defect energies.' 
+                    'concentration for intermetallics from the raw defect energies.'
 
     parser = ArgumentParser(description=m_description)
 
@@ -103,7 +101,7 @@ def im_vac_antisite_def_profile():
         file = args.file
 
 
-    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.temp,  file)
+    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.temp, file)
     if conc_dat:
         fl_nm = args.mpid+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
@@ -121,7 +119,7 @@ def im_vac_antisite_def_profile():
 
 def im_sol_sub_def_profile():
     m_description = 'Command to generate solute defect site preference ' \
-                    'in an intermetallics from the raw defect energies.' 
+                    'in an intermetallics from the raw defect energies.'
 
     parser = ArgumentParser(description=m_description)
 
@@ -131,23 +129,23 @@ def im_sol_sub_def_profile():
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
-    parser.add_argument("--solute", 
+    parser.add_argument("--solute",
             type=str,
             help="Solute Element")
 
-    parser.add_argument("--sol_conc", 
-            type=float, 
+    parser.add_argument("--sol_conc",
+            type=float,
             default=1.0,
             help="Solute Concentration in %. Default is 1%")
 
-    parser.add_argument("-T", "--temp", 
-            type=float, 
+    parser.add_argument("-T", "--temp",
+            type=float,
             default=1000.0,
             help="Temperature in Kelvin")
 
-    parser.add_argument("--trail_mu_file",  
+    parser.add_argument("--trial_mu_file",
             default=None,
-            help="Trial chemcal potential in dict format stored in file")
+            help="Trial chemical potential in dict format stored in file")
 
     args = parser.parse_args()
 
@@ -166,14 +164,14 @@ def im_sol_sub_def_profile():
     if not os.path.exists(sol_file):
         print ('===========\nERROR: Solute file not found.\n===========')
         return
-    if args.trail_mu_file:
-        trail_chem_pot = loadfn(args.trial_mu_file, cls=MontyDecoder)
+    if args.trial_mu_file:
+        trial_chem_pot = loadfn(args.trial_mu_file, cls=MontyDecoder)
     else:
-        trail_chem_pot = None
+        trial_chem_pot = None
 
     pt_def_conc = get_solute_def_profile(
-            args.mpid, args.solute, sol_conc, args.temp, def_file, 
-            sol_file, trial_chem_pot=trail_chem_pot)
+            args.mpid, args.solute, sol_conc, args.temp, def_file,
+            sol_file, trial_chem_pot=trial_chem_pot)
 
     if pt_def_conc:
         fl_nm = args.mpid + '_solute-' + args.solute + '_def_concentration.dat'
@@ -184,5 +182,5 @@ def im_sol_sub_def_profile():
 
 if __name__ == '__main__':
     im_vac_antisite_def_profile()
-    #im_sol_sub_def_profile()
+    # im_sol_sub_def_profile()
 
