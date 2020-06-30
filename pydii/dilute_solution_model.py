@@ -221,7 +221,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
             val += sum([c[i, j] * multiplicity[j] for j in range(n)])
         total_c.append(val)
     c_ratio = [total_c[-1] / total_c[i] for i in range(m)]
-    print(f'Concentration matrix:\n{c}')
+    # print(f'Concentration matrix:\n{c}')
     # print(f'Total c:\n{total_c}')
     # print(f'c_ratio:\n{c_ratio}')
 
@@ -243,7 +243,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
     omega = omega1 - omega2
     # print(f'Omega_1: {omega1}')
     # print(f'Omega_2: {omega2}')
-    print(f'Omega: {omega}')
+    # print(f'Omega: {omega}')
 
     # Compute composition range
     li = specie_site_index_map[0][0]
@@ -258,7 +258,6 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         yvals.append(y)
     print(f'Composition [min, max]: [{comp1_min}, {comp1_max}]')
     # print(f'yvals: {yvals}')
-    # sys.exit(1)
 
     def reduce_mu():
         print('reduce_mu() is called.')
@@ -289,12 +288,11 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
             m0 = mu_red[mu[0]].subs(mu[-1], m1)
 
             try:
-                x = sympy.nsolve(vector_func, mu, [m0, m1], module="numpy")
+                x = sympy.nsolve(vector_func, mu, [m0, m1])
             except:
                 continue
 
             c_val = c.subs(dict(zip(mu,x)))
-            #if all(x >= 0 for x in c_val):
             specie_concen = []
             for ind in specie_site_index_map:
                 specie_concen.append(sum([sum(c_val[i, :]) \
@@ -386,6 +384,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
             mu_vals = [ln_def_conc * k_B * T - vac_flip_en]
             mu_vals.append((e0 - spec_mult[0] * mu_vals[0]) / spec_mult[1])
             comp_ratio = yvals[0]
+            # print(f'Initial mu_vals: {mu_vals}')
 
             # Test if the trial mus are good
             vector_func = [comp_ratio - c_ratio[0]]
@@ -393,32 +392,26 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
             try:
                 mu_vals = sympy.nsolve(vector_func, mu, mu_vals)
                 # print(f'nsolve arguments:\n{vector_func}\n{mu}\n{mu_vals}')
-                print('Vacancy defect calculations worked.')
+                # print('Vacancy defect calculations worked.')
                 if mu_vals:
                     mu_vals = [float(mu_val) for mu_val in mu_vals]
                 break
             except:     # Go for antisite as dominant defect
-                mu_gs = [Symbol('mu_gs' + j.__str__()) for j in range(m)]
-
+                mu_gs = [Symbol(f'mu_gs{j}') for j in range(m)]
                 eqs = [mu_gs[0] - mu_gs[1] - (ln_def_conc * k_B * T - \
                        antisite_defs[i]['energy'])]
                 eqs.append(spec_mult[0] * mu_gs[0] + spec_mult[1] * mu_gs[1] - e0)
                 x = sympy.solve(eqs, mu_gs)
-                #mu_names = sorted([key.name for key in x.keys()])
-                mu_vals = []
-                for key in sorted(x.keys(), key=lambda inp: inp.name):
-                    mu_vals.append(x[key])
-                vector_func = [comp_ratio - c_ratio[0]]
-                vector_func.append(omega)
+                mu_vals = [x[key] for key in sorted(x.keys(), key=lambda inp: inp.name)]
 
                 try:
                     mu_vals = sympy.nsolve(vector_func, mu, mu_vals)
                     # print(f'nsolve arguments:\n{vector_func}\n{mu}\n{mu_vals}')
-                    print('Antisite defect calculations worked.')
+                    # print('Antisite defect calculations worked.')
                     if mu_vals:
                         mu_vals = [float(mu_val) for mu_val in mu_vals]
                     break
-                except: # Go to the default option (search the space)
+                except:     # Go to the default option (search the space)
                     pass
         else:
             mu_vals = compute_mus_by_search()
@@ -437,18 +430,18 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         vector_func = [y - c_ratio[0]]
         vector_func.append(omega)
         try:
-            x = sympy.nsolve(vector_func, mu, mu_vals, module="numpy")
+            x = sympy.nsolve(vector_func, mu, mu_vals)
             if x:
                 mu_vals = [float(mu_val) for mu_val in x]
         except:
             failed_y.append(y)
             failed_i.append(i)
             continue
-        result[y] = list(mu_vals)
+        result[y] = mu_vals
         x = None
     print(f'Failed {len(failed_i)} times.')
-    print(f'There are {len(result)} items.')
-    print(f'Example result: {list(result.items())[0]}')
+    # print(f'There are {len(result)} items.')
+    # print(f'Example result: {list(result.items())[0]}')
 
     def get_next_mu_val(i):
         if i >= len(yvals):
@@ -491,7 +484,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         trial_mu = list(map(lambda x: float(sum(x)) / len(x), \
                 zip(prev_mu_val, next_mu_val)))
         try:
-            x = sympy.nsolve(vector_func, mu, trial_mu, module="numpy")
+            x = sympy.nsolve(vector_func, mu, trial_mu)
             if x:
                 mu_vals = [float(mu_val) for mu_val in x]
         except:
@@ -510,9 +503,8 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         total_c_val = [total_c[i].subs(dict(zip(mu, mu_val))) \
                        for i in range(len(total_c))]
         c_val = c.subs(dict(zip(mu, mu_val)))
-        res1 = []
+        res1 = [float(total_c_val[0] / sum(total_c_val))]
         # Concentration of first element/over total concentration
-        res1.append(float(total_c_val[0] / sum(total_c_val)))
         new_mu_dict[res1[0]] = mu_val
         # sum_c0 = sum([c0[i, i] for i in range(n)])
         for i in range(n):
@@ -520,8 +512,13 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
                 if i == j:              # Vacancy
                     vac_conc = float(exp(-(mu_val[site_mu_map[i]] + dE[i, i])/(k_B * T)))
                     res1.append(vac_conc)
+                    if vac_conc > 1.0:
+                        print('Warning! Vacancy concentration is > 1.')
                 else:                   # Antisite
-                    res1.append(float(c_val[i, j] / c0[j, j]))
+                    anti_conc = float(c_val[i, j] / c0[j, j])
+                    res1.append(anti_conc)
+                    if anti_conc > 1.0:
+                        print('Warning! Antisite concentration is > 1.')
         res.append(res1)
     # print(f'res:\n{res}')
     # print(f'new_mu_dict:\n{new_mu_dict}')
@@ -556,9 +553,9 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         cur_ind = i - indices[0] + 1
         vac_string = "$Vac_{"
         if not specie_ind_del-1:
-            label = vac_string + specie + '}$'
+            label = f'{vac_string}{site_specie}}}$'
         else:
-            label = vac_string + specie + '_' + str(cur_ind) + '}$'
+            label = f'{vac_string}{site_specie}_{cur_ind}}}$'
         y_data.append({'data':data, 'name':label})
 
     # Get the antisites concentration for each site
@@ -573,15 +570,13 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
             if sub_specie == site_specie:
                 continue
             if not specie_ind_del-1:
-                label = '$' + sub_specie + '_{' + site_specie + '}$'
+                label = f'${sub_specie}_{{{site_specie}}}$'
             else:
-                label = '$' + sub_specie + '_{' + site_specie + '_' + \
-                        str(cur_ind) + '}$'
+                label = f'${sub_specie}_{{{site_specie}_{cur_ind}}}$'
             inds = specie_site_index_map[j]
             # Sum concentrations of multi-site species with same composition
             data = np.sum([conc[ind][i] for ind in range(*inds)], axis=0)
             data = data.tolist()
-            # print(f'data array after np.sum(): {data[:5]}')
             y_data.append({'data':data, 'name':label})
 
     conc_data['y'] = y_data
@@ -613,7 +608,6 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
     for i, vac_def in enumerate(vac_defs):
         data = [data[i] for data in en_res]
         site_specie = vac_def['site_specie']
-        # ind = specie_order.index(site_specie)
         specie_ind = site_mu_map[i]
         indices = specie_site_index_map[specie_ind]
         specie_ind_del = indices[1] - indices[0]
@@ -650,8 +644,6 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
         data = [data[i] for data in en_res]
         site_specie = as_def['site_specie']
         sub_specie = as_def['substitution_specie']
-        # ind1 = specie_order.index(site_specie)
-        # ind2 = specie_order.index(sub_specie)
         specie_ind = site_mu_map[i]
         indices = specie_site_index_map[specie_ind]
         specie_ind_del = indices[1] - indices[0]
@@ -799,18 +791,6 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
     if not check_input(antisite_defs):
         raise ValueError('Antisite energy is not defined')
 
-    # Get energy from parsing VASP, and delete entry.
-    # formation_energies = {}
-    # formation_energies['vacancies'] = copy.deepcopy(vac_defs)
-    # formation_energies['antisites'] = copy.deepcopy(antisite_defs)
-    # formation_energies['solute'] = copy.deepcopy(solute_defs)
-    # for vac in formation_energies['vacancies']:
-    #     del vac['energy']
-    # for asite in formation_energies['antisites']:
-    #     del asite['energy']
-    # for solute in formation_energies['solute']:
-    #     del solute['energy']
-
     # Setup the system
     site_species = [vac_def['site_specie'] for vac_def in vac_defs]
     solute_specie = solute_defs[0]['substitution_specie']
@@ -818,10 +798,10 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
     multiplicity = [vac_def['site_multiplicity'] for vac_def in vac_defs]
     m = len(set(site_species))  # distinct species
     n = len(vac_defs)           # inequivalent sites
-    print(f'Site species: {site_species}')
+    # print(f'Site species: {site_species}')
     print(f'Multiplicity: {multiplicity}')
-    print(f'Total number of distinct species: {m}')
-    print(f'Total number of inequivalent sites: {n}')
+    # print(f'Total number of distinct species: {m}')
+    # print(f'Total number of inequivalent sites: {n}')
 
     # Reduce the system and associated parameters such that only distinctive
     # atoms are retained
@@ -830,15 +810,15 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
     multiplicity.append(0)
     e0 = e0 / comm_div
     T = Float(T)
-    print(f'Energy: {e0}')
+    # print(f'Energy: {e0}')
     # print(f'Temperature: {T}, {type(T)}')
 
     # c0 = np.diag(multiplicity)
     c0 = np.diag(np.ones(n+1))
     c0[n, n] = 0
-    mu = [Symbol('mu' + str(i)) for i in range(m)]
+    mu = [Symbol(f'mu{i}') for i in range(m)]
     # print(f'c0 matrix:\n{c0}')
-    print(f'Mu list: {mu}')
+    # print(f'Mu list: {mu}')
 
     # Generate maps for hashing
     # Generate specie->mu map and use it for site->mu map
@@ -854,7 +834,7 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         site_specie = site_species[i]
         j = specie_order.index(site_specie)
         site_mu_map.append(j)
-    specie_site_index_map = []      # Eg: [(0,3),(3,4)] for Al & Ni
+    specie_site_index_map = []      # Eg: [(0,1), (1,2), (2,3)] for [Al, Ni ,Fe]
     for i in range(m):
         low_ind = site_species.index(specie_order[i])
         if i < m-1:
@@ -863,8 +843,8 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
             high_ind = len(site_species)
         specie_site_index_map.append((low_ind, high_ind))
     print(f'Specie order: {specie_order}')
-    print(f'Site specie set: {site_specie_set}')
-    print(f'Site mu map: {site_mu_map}')
+    # print(f'Site specie set: {site_specie_set}')
+    # print(f'Site mu map: {site_mu_map}')
     print(f'Specie site index map: {specie_site_index_map}')
 
     """
@@ -897,7 +877,7 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                     dC[i, j, k] = 0
     # solute case
     dC[n, n, :] = 1
-    # print(f'Delta concentration matrix:\n{dC}')
+    print(f'Delta concentration matrix:\n{dC}')
 
     # dE matrix: Flip energies (or raw defect energies)
     els = site_species.copy()
@@ -926,7 +906,7 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                 dE[n][j] = solute_def['energy']
                 break
     dE = np.array(dE)
-    # print(f'Delta energies matrix:\n{dE}')
+    print(f'Delta energies matrix:\n{dE}')
 
     # Initialization for concentrations
     # c(i, p) == presence of ith type atom on pth type site
@@ -943,8 +923,6 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                 if flip not in site_flip_contribs:
                     site_flip_contribs.append(flip)
                     c[i, p] += flip
-    # specie_concen = [sum(mult[ind[0]:ind[1]]) for ind in specie_site_index_map]
-    # total_c = [sum(c[ind[0]:ind[1]]) for ind in specie_site_index_map]
     total_c = []
     for ind in specie_site_index_map:
         val = 0
@@ -984,10 +962,13 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
     omega = copy.deepcopy(omega1)
     used_dEs = []
     for p_r in range(n):
-        for epi in range(n):
+        for epi in range(n):  # TODO CHECK THIS
             sum_mu1 = sum([mu[site_mu_map[j]] * \
-                          Integer(dC[j, epi, p_r]) for j in range(n)])
+                          Float(dC[j, epi, p_r]) for j in range(n)])
+            # print(f'sum_mu1, before: {sum_mu1}')
             sum_mu = sum_mu1 - mu[site_mu_map[n]] * dC[n, epi, p_r]
+            # print(f'sum_mu1, after: {sum_mu1}')
+            # print(f'sum_mu, after: {sum_mu}')
             if p_r != epi and site_mu_map[p_r] == site_mu_map[epi]:
                 continue
             if dE[epi, p_r] not in used_dEs:
@@ -996,8 +977,8 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                 omega -=  k_B * T * multiplicity[p_r] * \
                           exp(-(dE[epi, p_r] - sum_mu) / (k_B * T))
                 used_dEs.append(dE[epi, p_r])
-    print(f'Omega: {omega}')
-    print(f'used_dEs: {used_dEs}')
+    # print(f'Omega: {omega}')
+    # print(f'used_dEs: {used_dEs}')
 
     # Compute composition ranges
     max_host_specie_concen = 1 - solute_concen
@@ -1026,34 +1007,27 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         for i in range(n):
             new_c0[i, i] = host_concen * c0[i, i]
         new_c0[n, n] = 2 * solute_concen  # double because of binary host
-        omega = [e0 - sum([mu[site_mu_map[i]] * new_c0[i, i] \
-                 for i in range(n+1)])]
+        omega = [e0 - sum([mu[site_mu_map[i]] * new_c0[i, i] for i in range(n+1)])]
         x = sympy.solve(omega)
         return x
 
     def compute_solute_mu_by_lin_search(host_mu_vals):
         print('compute_solute_mu_by_lin_search() is called.')
-        # Compute trial mu
         mu_red = reduce_mu()
-        print(f'Reduced mu solution: {mu_red}')
+        # print(f'Reduced mu solution: {mu_red}')
 
-        # specie_concen = [sum(multiplicity[ind[0]:ind[1]]) for ind in specie_site_index_map]
-        # max_host_specie_concen = 1 - solute_concen
-        # host_specie_concen_ratio = [specie_concen[i] / sum(specie_concen) * \
-        #                             max_host_specie_concen for i in range(m)]
-        # host_specie_concen_ratio[-1] = solute_concen
         y_vect = host_specie_concen_ratio
-        vector_func = [y_vect[i] - c_ratio[i] for i in range(m)]
+        vector_func = [y_vect[i] - c_ratio[i] for i in range(m-1)]
         vector_func.append(omega)
-        # min_diff = 1e10
         mu_vals = None
-        # c_val = None
-        m1_min = -20.0
+        dm = 0.5
+        m1_min = -15.0
         if e0 > 0:
             m1_max = 10            # Search space needs to be modified
         else:
             m1_max = 0
-        for m1 in np.arange(m1_min, m1_max, 0.05):
+        for m1 in np.arange(m1_min, m1_max, dm):
+            # print(f'Checking mu_solute = {m1}...')
             trial_mus = host_mu_vals + [m1]
             try:
                 x = sympy.nsolve(vector_func, mu, trial_mus)
@@ -1070,22 +1044,24 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         print('compute_mus() is called.')
         # Compute trial mu
         mu_red = reduce_mu()
+        print(f'Reduced mu solution: {mu_red}')
 
         y_vect = host_specie_concen_ratio
         vector_func = [y_vect[i] - c_ratio[i] for i in range(m)]
         vector_func.append(omega)
         mu_vals = None
-        c_val = None
+        dm = 0.5
         m_min = -15.0
         if e0 > 0:
             m_max = 10            # Search space needs to be modified
         else:
             m_max = 0
-        for m1 in np.arange(m_min, m_max, 0.3):
-            for m2 in np.arange(m_min, m_max, 0.3):
+        for m1 in np.arange(m_min, m_max, dm):
+            for m2 in np.arange(m_min, m_max, dm):
+                # print(f'Checking mu_1={m1}, mu_2={m2}...')
                 m0 = mu_red[mu[0]].subs([(mu[1], m1), (mu[2], m2)])
                 try:
-                    mu_vals = sympy.nsolve(vector_func, mu, [m0, m1, m2], module="numpy")
+                    mu_vals = sympy.nsolve(vector_func, mu, [m0, m1, m2])
                     # Line needs to be modified to include all mus when n > 2
                 except:
                     continue
@@ -1094,28 +1070,29 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                 mu_vals = [float(mu_val) for mu_val in mu_vals]
                 break
         else:
-            raise ValueError("Couldn't find mus")
+            raise ValueError("Couldn't find mus!")
         return mu_vals
 
     if not trial_chem_pot:
         print('No trial chemical potential is given.')
         # Try computing mus by assuming one of the defects is dominant at 0.01
-        # concen.  First vacancy is tried and then antisite
+        # concentration. First vacancy is tried and then antisite.
 
         # Generate trial mus assuming vacancy as dominant defect
-        # for specie-0 at lower yval
+        # for specie-0 at lower yval.
         li0 = specie_site_index_map[0][0]
         hi0 = specie_site_index_map[0][1]
         li1 = specie_site_index_map[1][0]
         hi1 = specie_site_index_map[1][1]
         spec_mult = [sum(multiplicity[li0:hi0]), sum(multiplicity[li1:hi1])]
         ln_def_conc = 4.60517
+        # Try to initialize with host mus
         for i in range(li0, hi0):
             vac_flip_en =  vac_defs[i]['energy']
             mu_vals = [ln_def_conc * k_B * T - vac_flip_en]
             mu_vals.append((e0 - spec_mult[0] * mu_vals[0]) / spec_mult[1])
             comp_ratio = comp1_min
-            print(f'Initial vacancy mu_vals: {mu_vals}')
+            # print(f'Initial vacancy mu_vals: {mu_vals}')
 
             # Test if the trial mus are good
             vector_func = [comp_ratio - host_c_ratio[0]]
@@ -1128,23 +1105,23 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
                 compute_solute_mu_by_lin_search(host_mu_vals)
                 break
             except:     # Go for antisite as dominant defect
-                mu_gs = [Symbol('mu_gs' + j.__str__()) for j in range(m-1)]
+                mu_gs = [Symbol(f'mu_gs{j}') for j in range(m-1)]
                 eqs = [mu_gs[0] - mu_gs[1] - \
                        (ln_def_conc * k_B * T - antisite_defs[i]['energy'])]
                 eqs.append(spec_mult[0] * mu_gs[0] + spec_mult[1] * mu_gs[1] - e0)
                 x = sympy.solve(eqs, mu_gs)
-                print(f'Initial antisite equations: {eqs}')
-                print(f'Initial antisite mu_vals: {x}')
-                host_mu_vals = []
-                for key in sorted(x.keys(),key=lambda inp: inp.name):
-                    host_mu_vals.append(x[key])
+                # print(f'Initial antisite equations: {eqs}')
+                # print(f'Initial antisite mu_vals: {x}')
+                host_mu_vals = [x[key] for key in sorted(x.keys(), key=lambda inp: inp.name)]
+
                 try:
                     host_mu_vals = sympy.nsolve(vector_func, mu[:-1], host_mu_vals)
                     if host_mu_vals:
                         host_mu_vals = [float(mu_val) for mu_val in host_mu_vals]
+                    # print(f'Initial host_mu_vals: {host_mu_vals}')
                     mu_vals = compute_solute_mu_by_lin_search(host_mu_vals)
                     break
-                except: # Go to the default option (search the space)
+                except:     # Go to the default option (search the space)
                     pass
         else:
             mu_vals = compute_mus()
@@ -1181,14 +1158,18 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         c_val = c.subs(dict(zip(mu, mu_val)))
         # Concentration of first element / total concen
         res1 = [float(total_c_val[0] / sum(total_c_val))]
-        # sum_c0 = sum([c0[i, i] for i in range(n)])
         for i in range(n+1):
             for j in range(n):
                 if i == j:              # Vacancy
                     vac_conc = float(exp(-(mu_val[site_mu_map[i]] + dE[i, i])/(k_B * T)))
                     res1.append(vac_conc)
+                    if vac_conc > 1.0:
+                        print('Warning! Vacancy concentration is > 1.')
                 else:                   # Antisite
-                    res1.append(float(c_val[i, j] / c0[j, j]))
+                    anti_conc = float(c_val[i, j] / c0[j, j])
+                    res1.append(anti_conc)
+                    if anti_conc > 1.0:
+                        print('Warning! Antisite concentration is > 1.')
         res.append(res1)
     # print(f'res:\n{res}')
 
@@ -1221,9 +1202,9 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         cur_ind = i - indices[0] + 1
         vac_string = "$Vac_{"
         if not specie_ind_del-1:
-            label = vac_string + site_specie + '}$'
+            label = f'{vac_string}{site_specie}}}$'
         else:
-            label = vac_string + site_specie + '_' + str(cur_ind) + '}$'
+            label = f'{vac_string}{site_specie}_{cur_ind}}}$'
         y_data.append({'data':data, 'name':label})
 
     # Get the antisites and solute concentration for each site
@@ -1238,9 +1219,9 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
             if sub_specie == site_specie:
                 continue
             if not specie_ind_del-1:
-                label = '$' + sub_specie + '_{' + site_specie + '}$'
+                label = f'${sub_specie}_{{{site_specie}}}$'
             else:
-                label = '$' + sub_specie + '_{' + site_specie + '_' + str(cur_ind) + '}$'
+                label = f'${sub_specie}_{{{site_specie}_{cur_ind}}}$'
             inds = specie_site_index_map[j]
             # Sum concentrations of multi-site species with same composition
             data = np.sum([conc[ind][i] for ind in range(*inds)], axis=0)
