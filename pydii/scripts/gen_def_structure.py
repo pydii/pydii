@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-This file reads arguments and generate vacancy and antisite structures 
+This file reads arguments and generate vacancy and antisite structures
 in intermetallics.
 """
 
@@ -8,7 +8,7 @@ __author__ = "Bharat Medasani, Enze Chen"
 __data__  = "Apr 28, 2020"
 
 import os
-from argparse import ArgumentParser 
+from argparse import ArgumentParser
 
 from pymatgen.io.vasp.sets import MPMetalRelaxSet
 from pymatgen.ext.matproj import MPRester
@@ -49,10 +49,9 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     #conv_prim_ratio = int(conv_struct_sites / prim_struct_sites)
 
     # Default VASP settings
-    blk_vasp_incar_param = {'IBRION':-1, 'EDIFF':1e-5, 'EDIFFG':0.001, 'NSW':0,}
     def_vasp_incar_param = {'ISIF':2, 'EDIFF':1e-6, 'EDIFFG':0.001,}
     kpoint_den = 6000
-    
+
     # Create bulk structure and associated VASP files
     sc_scale = get_sc_scale(inp_struct=prim_struct, final_site_no=cellmax)
     blk_sc = prim_struct.copy()
@@ -68,7 +67,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
         blk_sc.make_supercell(scaling_matrix=sc_scale)
     blk_str_sites = set(blk_sc.sites)
     custom_kpoints = Kpoints.automatic_density(blk_sc, kppa=kpoint_den)
-    mpvis = MPMetalRelaxSet(blk_sc, user_incar_settings=blk_vasp_incar_param,
+    mpvis = MPMetalRelaxSet(blk_sc, user_incar_settings=def_vasp_incar_param,
                         user_kpoints_settings=custom_kpoints)
     ptcr_flag = True
     try:
@@ -93,7 +92,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax):
     for i, site in enumerate(prim_struct2.sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
-        
+
         # Get vacancy site information
         vac_str_sites = set(vac_sc.sites)
         vac_sites = blk_str_sites - vac_str_sites
@@ -131,7 +130,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     if not solute:
         print ("============\nERROR: Provide solute atom\n============")
         return
-    
+
     # Get primitive structure from the Materials Project DB
     if not mapi_key:
         with MPRester() as mp:
@@ -149,7 +148,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     # Default VASP settings
     def_vasp_incar_param = {'ISIF':2, 'EDIFF':1e-6, 'EDIFFG':0.001,}
     kpoint_den = 6000
-    
+
     # Create each substitutional defect structure and associated VASP files
     sc_scale = get_sc_scale(inp_struct=prim_struct, final_site_no=cellmax)
     blk_sc = prim_struct.copy()
@@ -176,7 +175,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
     for i, site in enumerate(prim_struct2.sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
-        
+
         # Get vacancy site information
         vac_str_sites = set(vac_sc.sites)
         vac_sites = blk_str_sites - vac_str_sites
@@ -190,7 +189,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
         custom_kpoints = Kpoints.automatic_density(solute_struct, kppa=kpoint_den)
         mpvis = MPMetalRelaxSet(solute_struct, user_incar_settings=def_vasp_incar_param,
                               user_kpoints_settings=custom_kpoints)
-        
+
         # Check if POTCAR file can be generated
         ptcr_flag = True
         try:
@@ -211,7 +210,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
 
 def im_vac_antisite_def_struct_gen():
     m_description = 'Command to generate vacancy and antisite defect ' \
-                    'structures for intermetallics.' 
+                    'structures for intermetallics.'
 
     parser = ArgumentParser(description=m_description)
 
@@ -234,14 +233,14 @@ def im_vac_antisite_def_struct_gen():
                  "The default is 128\n" \
                  "Keep in mind the number of atoms in the supercell" \
                  "may vary from the provided number including the default.")
-    
+
     args = parser.parse_args()
     vac_antisite_def_struct_gen(args.mpid, args.mapi_key, args.cellmax)
 
 
 def im_sol_sub_def_struct_gen():
     m_description = 'Command to generate solute substitution defect ' \
-                    'structures for intermetallics.' 
+                    'structures for intermetallics.'
 
     parser = ArgumentParser(description=m_description)
 
@@ -251,7 +250,7 @@ def im_sol_sub_def_struct_gen():
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
-    parser.add_argument("--solute", 
+    parser.add_argument("--solute",
             type=str,
             help="Solute Element")
 
@@ -268,7 +267,7 @@ def im_sol_sub_def_struct_gen():
                  "The default is 128\n" \
                  "Keep in mind the number of atoms in the supercell" \
                  "may vary from the provided number including the default.")
-    
+
     args = parser.parse_args()
     substitute_def_struct_gen(args.mpid, args.solute, args.mapi_key, args.cellmax)
 
