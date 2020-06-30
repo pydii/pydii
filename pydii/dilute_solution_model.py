@@ -1147,7 +1147,7 @@ def solute_site_preference_finder(structure, e0, vac_defs, antisite_defs, T, \
         except:
             continue
         result[y] = mu_vals
-    print(f'Example mu result: {list(result.items())[0]}')
+    #print(f'Example mu result: {list(result.items())[0]}')
 
     res = []
     # COMPUTE THE CONCENTRATION for all the compositions

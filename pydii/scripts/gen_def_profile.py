@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 from monty.serialization import loadfn
 from monty.json import MontyDecoder
-from dilute_solution_model import compute_defect_density, solute_defect_density
+from pydii.dilute_solution_model import compute_defect_density, solute_defect_density
 
 
 def get_def_profile(mpid, T,  file):
