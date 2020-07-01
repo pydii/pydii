@@ -147,7 +147,7 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax):
 
     # Default VASP settings
     def_vasp_incar_param = {'ISIF':2, 'EDIFF':1e-6, 'EDIFFG':0.001,}
-    kpoint_den = 6000
+    kpoint_den = 15000
 
     # Create each substitutional defect structure and associated VASP files
     sc_scale = get_sc_scale(inp_struct=prim_struct, final_site_no=cellmax)
