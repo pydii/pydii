@@ -181,6 +181,6 @@ def im_sol_sub_def_profile():
 
 
 if __name__ == '__main__':
-    im_vac_antisite_def_profile()
-    # im_sol_sub_def_profile()
+    # im_vac_antisite_def_profile()
+    im_sol_sub_def_profile()
 
