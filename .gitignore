@@ -3,3 +3,7 @@
 dist
 build
 /*.egg-info
+
+**/mp-*
+**/.ipynb_*
+**/*.ipynb
