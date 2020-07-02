@@ -524,7 +524,7 @@ def dilute_solution_model(structure, e0, vac_defs, antisite_defs, T, trial_chem_
     y_data = []
     for i in range(n):
         data = conc[i][i]
-        specie = els[i]
+        site_specie = els[i]
         specie_ind = site_mu_map[i]
         indices = specie_site_index_map[specie_ind]
         specie_ind_del = indices[1] - indices[0]
