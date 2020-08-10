@@ -88,5 +88,9 @@ For a description of the compounds and how to generate the defect concentration 
 refer to the manuscript:
 `Ding, H. et al, Computer Physics Communications, 193, (2015) <http://www.sciencedirect.com/science/article/pii/S0010465515001149>`_.
 
+Version 2.0
+----------
 
+Starting with version 1.9 (pre-release version of 2.0), the signature of the parser data is changing. So data files produced with pydii codes with different versions may not work. Please report any bugs on github issue tracker.
 
+Optionally, instead of specifying mpid, users can use their own structure to run the pydii calculations. Use the pydii help for more information.

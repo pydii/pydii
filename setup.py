@@ -12,7 +12,7 @@ def readme():
 setup(
         name="pydii",
         packages=find_packages(),
-        version="1.1.0",
+        version="1.9.0",
         install_requires=["pymatgen>=2020.1", "sympy>=1.0", "numpy>=1.13"],
         author="Bharat Medasani, Enze Chen",
         author_email="mbkumar@gmail.com, chenze@berkeley.edu",

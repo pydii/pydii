@@ -13,13 +13,13 @@ from monty.json import MontyDecoder
 from pydii.dilute_solution_model import compute_defect_density, solute_defect_density
 
 
-def get_def_profile(mpid, T,  file):
-    raw_energy_dict = loadfn(file, cls=MontyDecoder)
+def get_def_profile(mpid, T,  file_nm):
+    raw_energy_dict = loadfn(file_nm, cls=MontyDecoder)
 
-    e0 = raw_energy_dict[mpid]['e0']
-    struct = raw_energy_dict[mpid]['structure']
-    vacs = raw_energy_dict[mpid]['vacancies']
-    antisites = raw_energy_dict[mpid]['antisites']
+    e0 = raw_energy_dict['e0']
+    struct = raw_energy_dict['structure']
+    vacs = raw_energy_dict['vacancies']
+    antisites = raw_energy_dict['antisites']
     vacs.sort(key=lambda entry: entry['site_index'])
     antisites.sort(key=lambda entry: entry['site_index'])
     for vac_def in vacs:
@@ -39,15 +39,16 @@ def get_def_profile(mpid, T,  file):
         raise
 
 
-def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, trial_chem_pot):
+def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, 
+                           trial_chem_pot):
     raw_energy_dict = loadfn(def_file, cls=MontyDecoder)
     sol_raw_energy_dict = loadfn(sol_file, cls=MontyDecoder)
 
-    e0 = raw_energy_dict[mpid]['e0']
-    struct = raw_energy_dict[mpid]['structure']
-    vacs = raw_energy_dict[mpid]['vacancies']
-    antisites = raw_energy_dict[mpid]['antisites']
-    solutes = sol_raw_energy_dict[mpid]['solutes']
+    e0 = raw_energy_dict['e0']
+    struct = raw_energy_dict['structure']
+    vacs = raw_energy_dict['vacancies']
+    antisites = raw_energy_dict['antisites']
+    solutes = sol_raw_energy_dict['solutes']
     for vac_def in vacs:
         if not vac_def:
             print('All vacancy defect energies not present.')
@@ -72,15 +73,24 @@ def get_solute_def_profile(mpid, solute, solute_conc, T, def_file, sol_file, tri
 
 def im_vac_antisite_def_profile():
     m_description = 'Command to generate vacancy and antisite defect ' \
-                    'concentration for intermetallics from the raw defect energies.'
+                    'concentration for intermetallics from the raw defect ' \
+                    'energies.'
 
     parser = ArgumentParser(description=m_description)
 
-    parser.add_argument("--mpid",
+    parser.add_argument(
+            "--mpid",
+            default=None,
             type=str.lower,
             help="Materials Project id of the intermetallic structure.\n" \
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
+
+    parser.add_argument(
+            "--formula",
+            default=None,
+            type=str,
+            help="Reduced formula of the intermetallic compound")
 
     parser.add_argument('-T', "--temp", type=float, default=1000,
             help="Temperature in Kelvin")
@@ -92,26 +102,35 @@ def im_vac_antisite_def_profile():
 
     args = parser.parse_args()
 
-    if not args.mpid:
+    if not args.mpid and not args.formula:
         print ('===========\nERROR: mpid is not given.\n===========')
         return
+
     if not args.file:
-        file = args.mpid+'_raw_defect_energy.json'
+        if args.mpid:
+            file_name = args.mpid + '_raw_defect_energy.json'
+        elif args.formula:
+            file_name = args.formula + '_raw_defect_energy.json'
     else:
-        file = args.file
+        file_name = args.file
 
+    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.temp, file_name)
 
-    conc_dat, en_dat, mu_dat = get_def_profile(args.mpid, args.temp, file)
+    if args.mpid:
+        prefix = args.mpid
+    elif args.formula:
+        prefix = args.formula
+
     if conc_dat:
-        fl_nm = args.mpid+'_def_concentration.dat'
+        fl_nm = prefix+'_def_concentration.dat'
         with open(fl_nm,'w') as fp:
             for row in conc_dat:
                 print(row, file=fp)
-        fl_nm = args.mpid+'_def_energy.dat'
+        fl_nm = prefix+'_def_energy.dat'
         with open(fl_nm,'w') as fp:
             for row in en_dat:
                 print(row, file=fp)
-        fl_nm = args.mpid+'_chem_pot.dat'
+        fl_nm = prefix+'_chem_pot.dat'
         with open(fl_nm,'w') as fp:
             for row in mu_dat:
                 print(row, file=fp)
@@ -123,22 +142,33 @@ def im_sol_sub_def_profile():
 
     parser = ArgumentParser(description=m_description)
 
-    parser.add_argument("--mpid",
+    parser.add_argument(
+            "--mpid",
+            default=None,
             type=str.lower,
             help="Materials Project id of the intermetallic structure.\n" \
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
-    parser.add_argument("--solute",
+    parser.add_argument(
+            "--formula",
+            default=None,
+            type=str,
+            help="Reduced formula of the intermetallic compound")
+
+    parser.add_argument(
+            "--solute",
             type=str,
             help="Solute Element")
 
-    parser.add_argument("--sol_conc",
+    parser.add_argument(
+            "--sol_conc",
             type=float,
             default=1.0,
             help="Solute Concentration in %. Default is 1%")
 
-    parser.add_argument("-T", "--temp",
+    parser.add_argument(
+            "-T", "--temp",
             type=float,
             default=1000.0,
             help="Temperature in Kelvin")
@@ -149,14 +179,20 @@ def im_sol_sub_def_profile():
 
     args = parser.parse_args()
 
-    if not args.mpid:
+    if not args.mpid and not args.formula:
         print ('===========\nERROR: mpid is not given.\n===========')
         return
     if not args.solute:
         print ('===========\nERROR: Solute atom is not given.\n===========')
         return
-    def_file = args.mpid + '_raw_defect_energy.json'
-    sol_file = args.mpid + '_solute-' + args.solute + '_raw_defect_energy.json'
+
+    if args.mpid:
+        prefix = args.mpid
+    elif args.formula:
+        prefix = args.formula
+
+    def_file = prefix + '_raw_defect_energy.json'
+    sol_file = prefix + '_solute-' + args.solute + '_raw_defect_energy.json'
     sol_conc = args.sol_conc / 100.0 # Convert from percentage
     if not os.path.exists(def_file):
         print ('===========\nERROR: Defect file not found.\n===========')
@@ -174,7 +210,7 @@ def im_sol_sub_def_profile():
             sol_file, trial_chem_pot=trial_chem_pot)
 
     if pt_def_conc:
-        fl_nm = args.mpid + '_solute-' + args.solute + '_def_concentration.dat'
+        fl_nm = prefix + '_solute-' + args.solute + '_def_concentration.dat'
         with open(fl_nm, 'w') as fp:
             for row in pt_def_conc:
                 print(row, file=fp)
