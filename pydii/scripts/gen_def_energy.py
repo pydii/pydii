@@ -15,6 +15,7 @@ from argparse import ArgumentParser
 from pymatgen.ext.matproj import MPRester
 from monty.serialization import dumpfn
 from monty.json import MontyEncoder
+from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.outputs import Vasprun
 
 
@@ -102,7 +103,7 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None, root_fldr=None):
         root_fldr = mpid
     else:
         structure = Structure.from_file(
-                os.path.join('root_fldr', 'bulk', 'POSCAR.uc'))
+                os.path.join(root_fldr, 'bulk', 'POSCAR.uc'))
 
     red_formula = structure.composition.reduced_formula
     energy_dict = {}
@@ -261,6 +262,6 @@ def im_sol_sub_def_energy_parse():
 
 
 if __name__ == '__main__':
-    im_vac_antisite_def_energy_parse()
-    # im_sol_sub_def_energy_parse()
+    # im_vac_antisite_def_energy_parse()
+    im_sol_sub_def_energy_parse()
 
