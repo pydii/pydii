@@ -52,22 +52,23 @@ Installation
 
     python setup.py install
 
-   The command tries to obtain the required packages and their dependencies
-   and install them automatically. Access to root may be needed if
-   ``virtualenv`` is not used. Alternatively you can try ::
+The command tries to obtain the required packages and their dependencies
+and install them automatically. Access to root may be needed if
+``virtualenv`` is not used. Alternatively you can try ::
 
-   pip install . --user
+    pip install . --user
 
 #. The package can be installed at non-standard locations using the command ::
 
     python setup.py install --prefix PYDII_ROOTDIR
 
-   where ``PYDII_ROOTDIR`` is your choice of directory. In UNIX/Linux environments,
-   add ``PYDII_ROOTDIR`` to ``PATH`` and ``PYTHONPATH`` variables by the following
-   commands, which you can add to your ``.bashrc`` file ::
+where ``PYDII_ROOTDIR`` is your choice of directory. In UNIX/Linux environments,
+add ``PYDII_ROOTDIR`` to ``PATH`` and ``PYTHONPATH`` variables by the following
+commands, which you can add to your ``.bashrc`` file ::
 
     export PATH=$PATH:PYDII_ROOTDIR
     export PYTHONPATH=$PYTHONPATH:PYDII_ROOTDIR
+
 
 Materials Project API key
 -------------------------
@@ -85,12 +86,16 @@ From the PyDII root directory, go to the ``examples`` folder by typing::
 
 The ``examples`` folder contains two subfolders for Al3V and NiAl intermetallic systems.
 For a description of the compounds and how to generate the defect concentration profiles,
-refer to the manuscript:
-`Ding, H. et al, Computer Physics Communications, 193, (2015) <http://www.sciencedirect.com/science/article/pii/S0010465515001149>`_.
+refer to the manuscript: 
+`Ding, H. et al, Computer Physics Communications, 193, (2015) <https://www.sciencedirect.com/science/article/pii/S0010465515001149>`_.
 
 Version 2.0
 ----------
 
-Starting with version 1.9 (pre-release version of 2.0), the signature of the parser data is changing. So data files produced with pydii codes with different versions may not work. Please report any bugs on github issue tracker.
+Starting with version 1.9 (pre-release version of 2.0), the signature of the parser data is changing. 
+So data files produced with PyDII codes with different versions may not work. 
+Please report any bugs on the Issues tracker.
 
-Optionally, instead of specifying mpid, users can use their own structure to run the pydii calculations. Use the pydii help for more information.
+Optionally, instead of specifying ``mpid``, users can use their own structures to run the PyDII calculations, 
+as long as the structure is `compatible with Pymatgen <https://pymatgen.org/pymatgen.core.structure.html#pymatgen.core.structure.IStructure.from_file>`_. 
+Use the ``-h`` flag for more information.

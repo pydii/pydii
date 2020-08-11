@@ -3,7 +3,7 @@
 PyDII file for generating defect concentrations
 """
 __author__ = "Bharat Medasani, Enze Chen"
-__date__ = "2020/06/25"
+__date__ = "Aug 10, 2020"
 
 import os
 from argparse import ArgumentParser
@@ -82,7 +82,7 @@ def im_vac_antisite_def_profile():
             "--mpid",
             default=None,
             type=str.lower,
-            help="Materials Project id of the intermetallic structure.\n" \
+            help="Materials Project ID of the intermetallic structure.\n" \
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
@@ -90,7 +90,7 @@ def im_vac_antisite_def_profile():
             "--formula",
             default=None,
             type=str,
-            help="Reduced formula of the intermetallic compound")
+            help="Reduced formula of the intermetallic compound.")
 
     parser.add_argument('-T', "--temp", type=float, default=1000,
             help="Temperature in Kelvin")
@@ -122,16 +122,16 @@ def im_vac_antisite_def_profile():
         prefix = args.formula
 
     if conc_dat:
-        fl_nm = prefix+'_def_concentration.dat'
-        with open(fl_nm,'w') as fp:
+        fl_nm = prefix + '_def_concentration.dat'
+        with open(fl_nm, 'w') as fp:
             for row in conc_dat:
                 print(row, file=fp)
-        fl_nm = prefix+'_def_energy.dat'
-        with open(fl_nm,'w') as fp:
+        fl_nm = prefix + '_def_energy.dat'
+        with open(fl_nm, 'w') as fp:
             for row in en_dat:
                 print(row, file=fp)
-        fl_nm = prefix+'_chem_pot.dat'
-        with open(fl_nm,'w') as fp:
+        fl_nm = prefix + '_chem_pot.dat'
+        with open(fl_nm, 'w') as fp:
             for row in mu_dat:
                 print(row, file=fp)
 
@@ -154,7 +154,7 @@ def im_sol_sub_def_profile():
             "--formula",
             default=None,
             type=str,
-            help="Reduced formula of the intermetallic compound")
+            help="Reduced formula of the intermetallic compound.")
 
     parser.add_argument(
             "--solute",
@@ -175,7 +175,7 @@ def im_sol_sub_def_profile():
 
     parser.add_argument("--trial_mu_file",
             default=None,
-            help="Trial chemical potential in dict format stored in file")
+            help="Trial chemical potential in dict format stored in file.")
 
     args = parser.parse_args()
 
@@ -219,4 +219,3 @@ def im_sol_sub_def_profile():
 if __name__ == '__main__':
     # im_vac_antisite_def_profile()
     im_sol_sub_def_profile()
-
