@@ -5,7 +5,7 @@ in intermetallics.
 """
 
 __author__ = "Bharat Medasani, Enze Chen"
-__data__  = "Apr 28, 2020"
+__data__  = "Aug 10, 2020"
 
 import os
 from argparse import ArgumentParser
@@ -63,25 +63,19 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax, struct_file=None):
     site_no = blk_sc.num_sites
 
     # Rescale if needed
-    if site_no > cellmax:
+    while site_no > cellmax:
         max_sc_dim = max(sc_scale)
         i = sc_scale.index(max_sc_dim)
         sc_scale[i] -= 1
         blk_sc = prim_struct.copy()
         blk_sc.make_supercell(scaling_matrix=sc_scale)
+        site_no = blk_sc.num_sites
+    
     blk_str_sites = set(blk_sc.sites)
     custom_kpoints = Kpoints.automatic_density(blk_sc, kppa=kpoint_den)
     mpvis = MPMetalRelaxSet(blk_sc, user_incar_settings=def_vasp_incar_param,
                             user_kpoints_settings=custom_kpoints)
-    ptcr_flag = True
-    try:
-        potcar = mpvis.potcar
-    except:
-        print("VASP POTCAR folder not detected.\n" \
-              "Only INCAR, POSCAR, KPOINTS are generated.\n" \
-              "If you have VASP installed on this system, \n" \
-              "refer to pymatgen documentation for configuring the settings.")
-        ptcr_flag = False
+
     if mpid:
         root_fldr = mpid
     else:
@@ -90,7 +84,7 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax, struct_file=None):
     fin_dir = os.path.join(root_fldr, 'bulk')
     mpvis.write_input(fin_dir)
     if not mpid:    # write the input structure if mpid is not used
-        struct.to(fmt='poscar', filename=os.path.join(find_dir, "POSCAR.uc"))
+        struct.to(fmt='poscar', filename=os.path.join(fin_dir, 'POSCAR.uc'))
 
     # Create each defect structure and associated VASP files
     # First find all unique defect sites
@@ -179,12 +173,13 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax,
     site_no = blk_sc.num_sites
 
     # Rescale if needed
-    if site_no > cellmax:
+    while site_no > cellmax:
         max_sc_dim = max(sc_scale)
         i = sc_scale.index(max_sc_dim)
         sc_scale[i] -= 1
         blk_sc = prim_struct.copy()
         blk_sc.make_supercell(scaling_matrix=sc_scale)
+        site_no = blk_sc.num_sites
 
     # Create solute structures at vacancy sites
     # First find all unique defect sites
@@ -215,18 +210,6 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax,
                                 user_incar_settings=def_vasp_incar_param,
                                 user_kpoints_settings=custom_kpoints)
 
-        # Check if POTCAR file can be generated
-        ptcr_flag = True
-        try:
-            potcar = mpvis.potcar
-        except:
-            print("VASP POTCAR folder not detected.\n" \
-                  "Only INCAR, POSCAR, KPOINTS are generated.\n" \
-                  "If you have VASP installed on this system, \n" \
-                  "refer to pymatgen documentation for configuring the " \
-                  "settings.")
-            ptcr_flag = False
-
         # Generate VASP directory
         sub_def_dir ='solute_{}_mult-{}_sitespecie-{}_subspecie-{}'.format(
                 str(i+1), site_mult, vac_specie, solute)
@@ -252,14 +235,14 @@ def im_vac_antisite_def_struct_gen():
             "--struct",
             default=None,
             type=str,
-            help="Finename of the intermetallic structure.")
+            help="Filename of the intermetallic structure.")
 
     parser.add_argument(
             "--mapi_key",
             default=None,
             help="Your Materials Project REST API key.\n" \
                  "For more info, please refer to " \
-                 "www.materialsproject.org/opne")
+                 "www.materialsproject.org/open")
 
     parser.add_argument(
             "--cellmax",
@@ -293,7 +276,9 @@ def im_sol_sub_def_struct_gen():
             "--struct",
             default=None,
             type=str,
-            help="Finename of the intermetallic structure.")
+            help="Filename of the intermetallic structure." \
+                 "Supported file types include CIF, POSCAR/CONTCAR," \
+                 "CHGCAR, LOCPOT, vasprun.xml, CSSR, Netcdf, and pymatgen JSONs.")
 
     parser.add_argument(
             "--solute",
@@ -305,7 +290,7 @@ def im_sol_sub_def_struct_gen():
             default=None,
             help="Your Materials Project REST API key.\n" \
                  "For more info, please refer to " \
-                 "www.materialsproject.org/opne")
+                 "www.materialsproject.org/open")
 
     parser.add_argument(
             "--cellmax",
@@ -322,5 +307,5 @@ def im_sol_sub_def_struct_gen():
 
 
 if __name__ == '__main__':
-    #im_vac_antisite_def_struct_gen()
+    # im_vac_antisite_def_struct_gen()
     im_sol_sub_def_struct_gen()

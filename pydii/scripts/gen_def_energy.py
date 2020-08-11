@@ -6,7 +6,7 @@ for binary intermetallics, where the metadata is in the folder name
 """
 
 __author__ = "Bharat Medasani, Enze Chen"
-__data__  = "Apr 28, 2020"
+__data__  = "Aug 10, 2020"
 
 import os
 import glob
@@ -28,12 +28,6 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None, root_fldr=None):
 
     if mpid:
         root_fldr = mpid
-    #if not mapi_key:
-    #    with MPRester() as mp:
-    #        structure = mp.get_structure_by_material_id(mpid)
-    #else:
-    #    with MPRester(mapi_key) as mp:
-    #        structure = mp.get_structure_by_material_id(mpid)
 
     energy_dict = {}
 
@@ -47,19 +41,19 @@ def solute_def_parse_energy(mpid, solute, mapi_key=None, root_fldr=None):
         if not os.path.exists(vr_file):
             print (fldr_name, ": vasprun.xml doesn't exist in the folder. " \
                    "Abandoning parsing of energies for {}".format(root_fldr))
-            break       # Further processing for the mpid is not useful
+            break       # Further processing for the root_fldr is not useful
 
         try:
             vr = Vasprun(vr_file)
         except:
             print (fldr_name, ":Failure, couldn't parse vaprun.xml file. "
                    "Abandoning parsing of energies for {}.".format(root_fldr))
-            break       # Further processing for the mpid is not useful
+            break       # Further processing for the root_fldr is not useful
 
         if not vr.converged:
             print (fldr_name, ": Vasp calculation not converged. "
                    "Abandoning parsing of energies for {}".format(root_fldr))
-            break       # Further processing for the mpid is not useful
+            break       # Further processing for the root_fldr is not useful
 
         fldr_fields = fldr_name.split("_")
         if 'bulk' in fldr_fields:
@@ -110,7 +104,7 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None, root_fldr=None):
         structure = Structure.from_file(
                 os.path.join('root_fldr', 'bulk', 'POSCAR.uc'))
 
-    red_formula = structure.reduced_formula
+    red_formula = structure.composition.reduced_formula
     energy_dict = {}
 
     antisites = []
@@ -131,7 +125,7 @@ def vac_antisite_def_parse_energy(mpid, mapi_key=None, root_fldr=None):
         except:
             print (fldr_name, ":Failure, couldn't parse vaprun.xml file. "
                    "Abandoning parsing of energies for {}".format(red_formula))
-            break
+            break       # Further processing for the mpid is not useful
 
         if not vr.converged:
             print (fldr_name, ": Vasp calculation not converged. "
@@ -190,21 +184,20 @@ def im_vac_antisite_def_energy_parse():
     parser.add_argument("--mpid",
             type=str.lower,
             default=None,
-            help="Materials Project id of the intermetallic structure.\n" \
+            help="Materials Project ID of the intermetallic structure.\n" \
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
     parser.add_argument("--fldr",
             type=str,
             default=None,
-            help="Root folder of the calculation if materials project id is "
-                 "not used.")
+            help="Root folder of the calculation if mpid is not used.")
 
     parser.add_argument("--mapi_key",
             default = None,
             help="Your Materials Project REST API key.\n" \
                  "For more info, please refer to " \
-                 "www.materialsproject.org/opne")
+                 "www.materialsproject.org/open")
 
     args = parser.parse_args()
 
@@ -231,7 +224,7 @@ def im_sol_sub_def_energy_parse():
             "--mpid",
             type=str.lower,
             default=None,
-            help="Materials Project id of the intermetallic structure.\n" \
+            help="Materials Project ID of the intermetallic structure.\n" \
                  "For more info on Materials Project, please refer to " \
                  "www.materialsproject.org")
 
@@ -239,8 +232,7 @@ def im_sol_sub_def_energy_parse():
             "--fldr",
             type=str,
             default=None,
-            help="Root folder of the calculation if materials project id is "
-                 "not used.")
+            help="Root folder of the calculation if mpid is not used.")
 
     parser.add_argument(
             "--solute",
@@ -252,7 +244,7 @@ def im_sol_sub_def_energy_parse():
             default = None,
             help="Your Materials Project REST API key.\n" \
                  "For more info, please refer to " \
-                 "www.materialsproject.org/opne")
+                 "www.materialsproject.org/open")
 
     args = parser.parse_args()
 
