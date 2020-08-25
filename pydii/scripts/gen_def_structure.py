@@ -88,13 +88,10 @@ def vac_antisite_def_struct_gen(mpid, mapi_key, cellmax, struct_file=None):
 
     # Create each defect structure and associated VASP files
     # First find all unique defect sites
-    periodic_struct = sga.get_symmetrized_structure()
-    unique_sites = list(set([periodic_struct.find_equivalent_sites(site)[0] \
-                             for site in periodic_struct.sites]))
-    temp_struct = Structure.from_sites(sorted(unique_sites))
-    prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
-    prim_struct2.lattice = prim_struct.lattice  # a little hacky
-    for i, site in enumerate(prim_struct2.sites):
+    symm_struct = SpacegroupAnalyzer(prim_struct).get_symmetrized_structure()
+    unique_sites = sorted([site[0] for site in symm_struct.equivalent_sites], \
+                           key=lambda s: s.species_string)
+    for i, site in enumerate(unique_sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
 
@@ -184,13 +181,10 @@ def substitute_def_struct_gen(mpid, solute, mapi_key, cellmax,
     # Create solute structures at vacancy sites
     # First find all unique defect sites
     blk_str_sites = set(blk_sc.sites)
-    periodic_struct = sga.get_symmetrized_structure()
-    unique_sites = list(set([periodic_struct.find_equivalent_sites(site)[0] \
-                             for site in periodic_struct.sites]))
-    temp_struct = Structure.from_sites(sorted(unique_sites))
-    prim_struct2 = SpacegroupAnalyzer(temp_struct).find_primitive()
-    prim_struct2.lattice = prim_struct.lattice  # a little hacky
-    for i, site in enumerate(prim_struct2.sites):
+    symm_struct = SpacegroupAnalyzer(prim_struct).get_symmetrized_structure()
+    unique_sites = sorted([site[0] for site in symm_struct.equivalent_sites], \
+                           key=lambda s: s.species_string)
+    for i, site in enumerate(unique_sites):
         vac = Vacancy(structure=prim_struct, defect_site=site)
         vac_sc = vac.generate_defect_structure(supercell=sc_scale)
 
@@ -307,5 +301,5 @@ def im_sol_sub_def_struct_gen():
 
 
 if __name__ == '__main__':
-    # im_vac_antisite_def_struct_gen()
-    im_sol_sub_def_struct_gen()
+    im_vac_antisite_def_struct_gen()
+    # im_sol_sub_def_struct_gen()
